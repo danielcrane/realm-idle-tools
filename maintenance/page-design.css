@@ -1,0 +1,35 @@
+/* Shared shell; individual tools retain their grids and semantic colours. */
+:root {
+  color-scheme: light;
+  --bg: #f5f4ee;
+  --paper: #fffef9;
+  --panel: var(--paper);
+  --ink: #20352d;
+  --muted: #5c6c63;
+  --line: #d8dfd5;
+  --accent: #2c684c;
+  --soft: #eaf0e7;
+  --on-accent: #fffef9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #151e19;
+    --paper: #1d2922;
+    --ink: #edf1e7;
+    --muted: #b3c1b5;
+    --line: #3a4d3f;
+    --accent: #add4aa;
+    --soft: #293c2e;
+    --on-accent: #20352d;
+  }
+}
+body { background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+body > main { box-sizing: border-box; max-width: 1240px; margin-inline: auto; padding: 36px 32px; }
+main h1 { font-family: Georgia, serif; font-size: clamp(2.5rem, 4.5vw, 3.7rem); line-height: 1.1; letter-spacing: -.045em; font-weight: 400; }
+@media (max-width: 720px) {
+  body > main { padding: 24px 16px; }
+}
+@media print {
+  body > main { max-width: none; padding: 0; }
+}

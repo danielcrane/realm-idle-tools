@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
+  <title>Realm Idle · XP Calculator</title>
+  <link rel="icon" href="combat_simulator/Assets/realmidle.png">
+  <link rel="stylesheet" href="maintenance/navigation.css"><link rel="stylesheet" href="xp/xp.css">
+  <script defer src="xp/source-data.js"></script><script defer src="xp/xp-model.js"></script><script defer src="combat_simulator/source-rules.js"></script><script defer src="character_profile/model.js"></script><script defer src="character_profile/characters.js"></script><link rel="stylesheet" href="character_profile/characters.css"><script defer src="combat_simulator/profile_preview/storage-link.js"></script><script defer src="xp/profile_preview/model.js"></script><script defer src="xp/profile_preview/app.js"></script><script defer src="xp/profile_preview/profile.js"></script>
+<script defer src="maintenance/navigation.js"></script>
+<script defer src="maintenance/stat-colors.js"></script>
+<link rel="stylesheet" href="xp/profile_preview/styles.css"><script defer src="xp/profile_preview/companions.js"></script><script defer src="xp/profile_preview/consumables.js"></script></head>
+<body>
+<nav class="realm-nav" aria-label="Realm Idle tools"><div class="realm-nav-brand"><span class="realm-nav-label">Realm Idle Tools</span><span class="realm-nav-version">Game Version <b>4.1.3.8</b></span></div><div class="realm-nav-links"><a href="index.html">Home</a><details class="realm-nav-menu"><summary class="realm-nav-current">Simulator</summary><div class="realm-nav-dropdown"><a href="character-profile.html">Character Setup</a><a href="xp-calculator.html" aria-current="page">XP Calculator</a><a href="combat-simulator.html">Combat Simulator</a><a href="skill-boss-planner.html">Gathering Bosses</a></div></details><a href="item-catalogue.html">Item Catalogue</a><a href="forge-planner.html">Forge Planner</a><a href="rare-gathering.html">Rare Gathering</a><a href="event-planner.html">Events</a></div></nav>
+<main>
+  <header class="hero"><div><span class="eyebrow">REALM IDLE / TRAINING PLANNER</span><h1>Train with Your Character Profile.</h1><p>Plan your next level. Tune your loadout, compare XP rates, and estimate a session with the supplies you actually have.</p></div><img src="combat_simulator/Assets/Items/Misc/candy_xp.png" width="108" height="108" alt="XP candy"></header>
+  <div class="source-strip"><span><strong>Game-source calculations</strong> · 10 skills · <span id="action-count">576</span> timed actions</span><span><a href="#assumptions">How estimates work</a></span></div>
+  <section class="profile-panel" aria-label="Character Profile"><div class="profile-bar"><label for="profile-select">Profile</label><select id="profile-select"><option value="saved">Loading Saved Profile…</option><option value="custom">Custom</option></select><a href="character-profile.html" target="_blank" rel="noopener" title="Edit Character Profile">Edit ↗</a><button type="button" id="reset-profile" class="text-button" hidden>Reset to Profile</button><span id="profile-state" hidden></span><details class="profile-more"><summary>More</summary><label class="text-button" for="profile-backup">Load Profile Backup</label><input type="file" id="profile-backup" accept=".json,application/json" hidden></details></div><p id="profile-status" class="muted" role="status" hidden></p><button type="button" id="connect-profile" class="text-button" hidden>Load Saved Profile</button><span id="profile-summary" hidden></span></section><div class="workspace">
+    <form id="planner" novalidate>
+      <section class="panel"><div class="section-heading"><h2><span>01</span> Your Training Session</h2><button type="button" id="reset" class="text-button">Reset</button></div>
+        <div class="fields"><label>Skill<select id="skill"></select></label><label>Rate timing<select id="timingMode"><option value="offline">Offline action timing</option><option value="online">Online ticks &amp; batches</option></select></label><label class="wide">Action<select id="action"></select></label>
+          <label>Starting level<input id="from" type="number" min="1" max="130" step="1"></label><label>Target level<input id="to" type="number" min="1" max="130" step="1"></label>
+          <label class="xp-progress" title="Cumulative XP for this skill, as shown in the game. Editing it updates the starting level.">Total XP<input id="currentXp" type="number" min="0" step="1"></label>
+        </div>
+        <div class="adaptive"><h3>Automatic Progression <button type="button" class="help-tip" aria-label="About automatic progression" data-tip="Nodes use the highest unlock level. Tools rank by rarity-adjusted speed including set speed. Shop mode assumes immediate Common tool purchases. Follow these switches in-game; they are not automatic offline actions.">?</button></h3><label data-divinity><input type="checkbox" id="autoBlessing"> Use the Strongest Available XP Blessing</label><label data-gather><input type="checkbox" id="autoTool"> Upgrade Gathering Tools as Levels Increase</label><label data-gather><input type="checkbox" id="autoNode"> Gather from the Strongest Unlocked Node</label><label data-gather>Available Tools<select id="toolPolicy"><option value="owned">Recorded tools and selected tool only</option><option value="shop">Also assume Common shop tools at each unlock</option></select></label></div><p id="xp-origin" class="muted"></p><h3>Weather</h3><div class="fields">
+          <input id="sessionHours" type="hidden" value="0">
+          <input id="weatherMode" type="hidden" value="manual"><label>Session Starts (UTC)<input id="start" type="datetime-local" min="2020-01-01T00:00" max="2100-12-31T23:59"></label>
+          <label data-manual>Season<span class="weather-selection"><img id="season-icon" width="32" height="32" alt="" hidden><select id="season"></select></span></label><label data-manual>Weather<span class="weather-selection"><img id="weather-icon" width="32" height="32" alt="" hidden><select id="weather"></select></span></label>
+        </div><p id="weather-info" class="action-meta"></p><p class="action-meta" id="action-meta"></p>
+      </section>
+      <section class="panel"><details id="bonus-equipment" open><summary>Bonuses &amp; Equipment</summary>
+        <div class="reward-panel" role="group" aria-labelledby="reward-heading"><h3 id="reward-heading">Reward Bonuses</h3>
+          <div class="vip-options">
+            <label class="vip-option" style="--vip-color:#fbbf24"><span class="vip-name"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M22,9.81a1,1,0,0,0-.83-.69l-5.7-.78L12.88,3.53a1,1,0,0,0-1.76,0L8.57,8.34l-5.7.78a1,1,0,0,0-.82.69,1,1,0,0,0,.28,1l4.09,3.73-1,5.24A1,1,0,0,0,6.88,20.9L12,18.38l5.12,2.52a1,1,0,0,0,.44.1,1,1,0,0,0,1-1.18l-1-5.24,4.09-3.73A1,1,0,0,0,22,9.81Z" fill="#fbbf24"/></svg><b>VIP I</b></span><input id="vip" type="checkbox" aria-label="VIP I" aria-describedby="vip-summary"></label>
+            <label class="vip-option" style="--vip-color:#a78bfa"><span class="vip-name"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M22,9.81a1,1,0,0,0-.83-.69l-5.7-.78L12.88,3.53a1,1,0,0,0-1.76,0L8.57,8.34l-5.7.78a1,1,0,0,0-.82.69,1,1,0,0,0,.28,1l4.09,3.73-1,5.24A1,1,0,0,0,6.88,20.9L12,18.38l5.12,2.52a1,1,0,0,0,.44.1,1,1,0,0,0,1-1.18l-1-5.24,4.09-3.73A1,1,0,0,0,22,9.81Z" fill="#a78bfa"/></svg><b>VIP II</b></span><input id="vipPlus" type="checkbox" aria-label="VIP II" aria-describedby="vip-summary"></label>
+          </div>
+          <p id="vip-summary" class="reward-summary"></p>
+          <div class="community-control"><img src="combat_simulator/Assets/Icons/communitycenter.png" width="34" height="34" alt=""><label for="community">Community centre</label><output id="community-percent" for="community">100%</output></div>
+          <input id="community" class="community-slider" type="range" min="0" max="100" step="25" value="100" aria-describedby="community-summary" aria-valuetext="100%" style="--community-fill:100%">
+          <div class="community-ticks" aria-hidden="true"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+          <p id="community-summary" class="reward-summary"></p>
+        </div>
+        
+        <details open><summary>Tools &amp; Jewelry</summary><div class="fields">
+          <label data-gather>Gathering tool<select id="tool"></select></label><label data-gather>Tool rarity<select id="toolRarity"></select></label>
+          <label>Amulet<select id="amulet"></select></label><label>Amulet rarity<select id="amuletRarity"></select></label>
+          <label>Pearl Ring 1<select id="ring1"></select></label><label>Pearl Ring 2<select id="ring2"></select></label>
+        </div></details>
+        <details data-gather><summary>Gathering Armor &amp; Set Bonuses</summary><div class="fields" id="armor-fields"></div><p id="set-info" class="muted"></p><p class="muted">Mixed tiers of the matching boss set count together. Three pieces add 5% speed; six add 15% and half the boss pet perk. The matching boss tool counts as a piece.</p></details>
+        <details><summary>Custom Bonuses</summary><div class="fields">
+          
+          <label>Custom XP 1 (%)<input id="customXp1" type="number" min="0" max="1000" step="any"></label><label>Custom XP 2 (%)<input id="customXp2" type="number" min="0" max="1000" step="any"></label><label>Custom XP 3 (%)<input id="customXp3" type="number" min="0" max="1000" step="any"></label>
+          <label data-gather>Other gathering gear (%)<input id="customGather" type="number" min="0" max="1000" step="any"></label><label data-production>Other production gear (%)<input id="customProd" type="number" min="0" max="1000" step="any"></label>
+        </div></details>
+      </details></section>
+      <section class="panel" id="companions"><h2>Blessing &amp; Pet</h2><div class="fields"><label id="custom-divinity">Divinity level<input id="divinityLevel" type="number" min="1" max="130" step="1"></label>
+          <label class="wide">Blessing<select id="blessing"></select></label><label class="wide">Pet<select id="pet"></select></label>
+        </div></section><section class="panel candy-panel" id="consumables"><h2>Consumables</h2>
+        
+        <div data-speed><h3>Potions</h3><label class="consumable-unlimited"><input id="infinitePotions" type="checkbox"> Unlimited Potion Minutes</label><div class="fields"><label data-gather>Gathering speed potion<select id="gatheringPotion"></select></label><label data-gather>Remaining active minutes<input id="gatheringMinutes" type="number" min="0" step="0.01"></label>
+          <label data-production>Production speed potion<select id="productionPotion"></select></label><label data-production>Remaining active minutes<input id="productionMinutes" type="number" min="0" step="0.01"></label>
+          <label data-gather>Gathering XP potion<select id="xpPotion"></select></label><label data-gather>Remaining active minutes<input id="xpMinutes" type="number" min="0" step="0.01"></label></div></div><h3>Candies</h3><label class="consumable-unlimited"><input id="infiniteCandies" type="checkbox"> Unlimited Candies</label>
+        <div class="fields candy-fields"><label>XP candy<select id="xpCandy"></select></label><label>Quantity consumed at start<input id="xpCandyCount" type="number" min="0" step="1"></label>
+          <label data-speed><span id="speed-candy-label">Gathering candy</span><select id="speedCandy"></select></label><label data-speed>Quantity consumed at start<input id="speedCandyCount" type="number" min="0" step="1"></label>
+        </div><p id="candy-info" class="candy-info"></p>
+        <div id="inventory-section"><h3>Available Materials</h3><button type="button" id="use-inventory" class="secondary-button" disabled>Use Profile Inventory</button><p id="inventory-note" class="muted"></p><div class="checks"><label><input id="limitMaterials" type="checkbox"> Stop when materials run out</label></div><div id="inventory-fields" class="fields"></div><p class="muted">Quantities are inventory items, not actions. Free pet products consume no extra ingredients. Leave the toggle off to assume unlimited materials.</p></div>
+      </section>
+      <button type="button" id="load-sheet" class="secondary-button">Restore Default Selections</button><span id="load-status" class="muted" role="status"></span>
+    </form>
+    <aside class="results" aria-label="Training estimate">
+      <div id="error" class="error" role="alert" hidden></div>
+      <div id="result-content" aria-live="polite" aria-atomic="true">
+        <section class="result-hero"><span class="eyebrow">STARTING XP RATE</span><h2 id="rate">—</h2><p>XP per hour <span id="rate-timing"></span></p><div class="comparison" id="comparison"></div><div class="result-pair"><div><span>Time to target</span><strong id="target-time">—</strong></div><div><span>XP remaining</span><strong id="required">—</strong></div></div><p class="hero-note">Time to target includes consumable expiry, selected weather bonuses and enabled upgrades, using offline action timing.</p></section>
+        <section class="panel"><h2>What Each Action Earns</h2><dl class="stats"><div><dt>Expected XP per timed action</dt><dd id="xp-action">—</dd></div><div><dt>Average action duration</dt><dd id="duration">—</dd></div><div><dt>Timed actions to target</dt><dd id="actions-needed">—</dd></div><div><dt>Pet / set extra XP</dt><dd id="pet-extra">—</dd></div><div id="success-row"><dt>Starting success chance</dt><dd id="success">—</dd></div></dl>
+          <h3>Materials to Target</h3><ul class="materials" id="materials"></ul>
+        </section>
+        <section class="panel"><h2>Target Plan</h2><p id="target-status"></p><div id="coverage" class="coverage"></div></section>
+        <section class="panel"><h2>Progression Route</h2><select id="route-mode" hidden><option value="target">To Target</option></select><div id="route"></div></section><section class="panel"><h2>Material Planning</h2><div id="material-plan"></div></section><section class="panel"><details><summary>Multiplier Breakdown</summary><div id="breakdown"></div></details></section>
+        <div id="warnings" class="warnings"></div>
+      </div>
+    </aside>
+  </div>
+  <section class="panel assumptions" id="assumptions"><span class="eyebrow">ABOUT THE MODEL</span><h2>Training Rules from the Bundled Game.</h2><p>The web calculator now uses the extracted Realm Idle 4.1.3.8 action tables, XP curve, blessings, pets, equipment, and potion catalogs. Rune unlock records are excluded because they are not timed training actions. Combat-only and drop-only bonuses are excluded from the selectors.</p><p>The target plan uses offline rules and solves for the time required to reach your target. Selected season and weather bonuses apply throughout the plan. Candy effects account for duration and event dates. Potions run out after their recorded active minutes; material limits can prevent reaching the target. Enabled upgrades assume immediate player intervention.</p><p>XP is the awarded amount before the game’s level-130 storage clamp. Level progress stops at 130.</p></section>
+  <footer><span>Realm Idle · Runs locally, no account needed</span><a href="index.html">All tools</a></footer>
+</main><noscript><p>This calculator needs JavaScript enabled.</p></noscript></body></html>

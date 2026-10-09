@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Character Profile · Realm Idle</title>
+  <link rel="icon" href="combat_simulator/Assets/realmidle.png">
+  <link rel="stylesheet" href="character_profile/styles.css">
+  <link rel="stylesheet" href="maintenance/navigation.css">
+  <script src="combat_simulator/source-rules.js" defer></script>
+  <script src="xp/source-data.js" defer></script>
+  <script src="character_profile/model.js" defer></script><script defer src="character_profile/characters.js"></script><link rel="stylesheet" href="character_profile/characters.css">
+  <script src="character_profile/storage-link.js" defer></script>
+  <script src="character_profile/game-import.js" defer></script>
+  <script src="character_profile/inventory-ui.js" defer></script>
+  <script src="character_profile/recovery.js" defer></script>
+  <script src="combat_simulator/setup-codec.js" defer></script>
+  <script src="character_profile/setup-codec.js" defer></script>
+  <script src="character_profile/app.js" defer></script>
+<script defer src="maintenance/navigation.js"></script>
+<script defer src="maintenance/stat-colors.js"></script>
+</head>
+<body>
+<nav class="realm-nav" aria-label="Realm Idle tools"><div class="realm-nav-brand"><span class="realm-nav-label">Realm Idle Tools</span><span class="realm-nav-version">Game Version <b>4.1.3.8</b></span></div><div class="realm-nav-links"><a href="index.html">Home</a><details class="realm-nav-menu"><summary class="realm-nav-current">Simulator</summary><div class="realm-nav-dropdown"><a href="character-profile.html" aria-current="page">Character Setup</a><a href="xp-calculator.html">XP Calculator</a><a href="combat-simulator.html">Combat Simulator</a><a href="skill-boss-planner.html">Gathering Bosses</a></div></details><a href="item-catalogue.html">Item Catalogue</a><a href="forge-planner.html">Forge Planner</a><a href="rare-gathering.html">Rare Gathering</a><a href="event-planner.html">Events</a></div></nav>
+<a class="skip" href="#content">Skip to Profile</a>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="combat_simulator/Assets/realmidle.png" width="38" height="38" alt=""><span>REALM IDLE<small>CHARACTER JOURNAL</small></span></div>
+    <div class="identity"><span class="avatar" aria-hidden="true">◆</span><strong id="sidebar-name">My Adventurer</strong><span class="muted">Your realm, recorded.</span></div>
+    <nav aria-label="Profile sections" id="section-nav">
+      <button type="button" data-section="skills" aria-current="page"><span>01</span> Skill Levels</button>
+      <button type="button" data-section="pets"><span>02</span> Pets</button>
+      <button type="button" data-section="museum"><span>03</span> Museum</button>
+      <button type="button" data-section="combat"><span>04</span> Combat Gear Sets</button>
+      <button type="button" data-section="skilling"><span>05</span> Skilling Gear</button>
+      <button type="button" data-section="account"><span>06</span> Account &amp; Unlocks</button>
+      <button type="button" data-section="inventory"><span>07</span> Inventory</button>
+    </nav>
+    <div class="sidebar-foot"><span class="local-dot"></span> Stored in This Browser<p>Keep a backup to move your profile to another browser or device.</p></div>
+  </aside>
+  <main>
+    <header class="topbar"><div class="realm-nav-brand"><span class="eyebrow">Your Adventurer’s Record</span><span class="realm-nav-version">Game Version <b>4.1.3.8</b></span></div><div class="actions"><button type="button" id="share-btn">Share / Load Setup</button><button type="button" id="import-game">Import Game Save</button><input type="file" id="game-save-file" accept=".json,application/json" hidden><button type="button" id="import">Import Backup</button><button type="button" id="export" class="primary">Export Backup <span aria-hidden="true">↗</span></button><input type="file" id="import-file" accept=".json,application/json" hidden></div></header>
+    <div class="hero"><div><h1>Character Profile</h1><p>Keep your skills, collection, and favourite setups in one place.</p></div></div>
+    <div class="profile-bar"><label for="profile-name">Character Name<input id="profile-name" maxlength="60" required value="My Adventurer" autocomplete="off"></label><div id="save-status" role="status">Ready to save your profile.</div></div>
+    <div class="summary" aria-label="Profile summary"><div><span>Total Level</span><strong id="total-level">15</strong><small>Across 15 skills</small></div><div><span>Owned Pets</span><strong id="pet-total">0</strong><small>Your available companions</small></div><div><span>Museum Collection</span><strong id="museum-total">0</strong><small>Recorded item rarities</small></div><div><span>Combat Gear Sets</span><strong id="set-total">0</strong><small>Named combat presets</small></div></div>
+    <div id="message" role="status" hidden></div>
+    <div id="content" tabindex="-1">
+      <section id="section-skills" aria-labelledby="heading-skills"><div class="section-heading"><div><span class="eyebrow">01 / The Foundations</span><h2 id="heading-skills">Skill Levels</h2><p>Enter your current levels. Exact total XP is optional and sets the matching level automatically.</p></div></div><div id="skill-groups"></div></section>
+      <section id="section-pets" aria-labelledby="heading-pets" hidden><div class="section-heading"><div><span class="eyebrow">02 / Your Companions</span><h2 id="heading-pets">Pets</h2><p>Mark the pets you own, then choose a companion for each gear set.</p></div></div><div class="filters"><label>Find a Pet<input id="pet-search" type="search" placeholder="Search names or bonuses…"></label><label>Category<select id="pet-category"><option value="">All Pets</option><option>Skilling</option><option>Boss</option><option>Monster</option><option>Event</option></select></label><label class="check"><input id="pets-owned-only" type="checkbox">Owned only</label></div><p id="pet-results" class="muted"></p><div id="pet-grid" class="pet-grid"></div></section>
+      <section id="section-museum" aria-labelledby="heading-museum" hidden><div class="section-heading"><div><span class="eyebrow">03 / The Collection</span><h2 id="heading-museum">Museum</h2><p>Record the highest rarity you have collected for each item, even if you no longer own it.</p></div><label>Bonus Source<select id="museum-mode"><option value="collection">Recorded Collection</option><option value="manual">Displayed In-Game Bonuses</option></select></label></div><p id="museum-unlock" class="notice"></p><div id="museum-bonuses" class="bonus-grid"></div><div id="museum-manual" class="panel" hidden></div><div class="panel"><h3>Item Collection</h3><p class="muted">Choose a combat style and expand a tier. Record each item’s highest collected rarity, or choose Unowned.</p><div class="museum-toolbar"><div id="museum-filter" class="museum-style-selector" role="group" aria-label="Combat Style"></div><div class="filters museum-search-row"><label>Find an Item<input id="museum-search" type="search" placeholder="Try Mythril, staff, or shield…"></label></div></div><div id="museum-list"></div></div></section>
+      <section id="section-combat" aria-labelledby="heading-combat" hidden><div class="section-heading"><div><span class="eyebrow">04 / Ready for Battle</span><h2 id="heading-combat">Combat Gear Sets</h2><p>Save equipment, rarities, a pet, and a blessing under a name you recognise.</p></div><button type="button" class="primary" data-new-set="combat">＋ New Combat Set</button></div><div id="combat-sets"></div></section>
+      <section id="section-skilling" aria-labelledby="heading-skilling" hidden><div class="section-heading"><div><span class="eyebrow">05 / Tools of the Trade</span><h2 id="heading-skilling">Skilling Gear</h2><p>Record your best skilling items: one piece per slot for each gathering skill, plus shared amulets and two Pearl Rings.</p></div></div><div id="skilling-sets"></div></section>
+      <section id="section-account" aria-labelledby="heading-account" hidden><div class="section-heading"><div><span class="eyebrow">06 / Beyond Your Equipment</span><h2 id="heading-account">Account &amp; Unlocks</h2><p>Record account bonuses and progression shared by your character’s setups.</p></div></div><div id="account-fields"></div></section>
+      <section id="section-inventory" aria-labelledby="heading-inventory" hidden>
+        <div class="section-heading"><div><span class="eyebrow">07 / Planning Supplies</span><h2 id="heading-inventory">Inventory</h2><p>Record resources and owned items for planning. Imported totals include equipped items and tools.</p></div></div>
+        <div class="panel"><label>Inventory Coverage<select id="inventory-coverage"><option value="partial">Partial — Unlisted Quantities Are Unknown</option><option value="complete">Complete — Unlisted Items Have Zero Quantity</option></select></label><p class="note">Leave a quantity blank to mark it unknown. Enter 0 for a confirmed zero. Editing a total clears its rarity breakdown; edit individual rarity counts to preserve it.</p><form id="inventory-add" class="filters"><label>Add Item<input id="inventory-item" list="inventory-catalog" maxlength="120" required placeholder="Search or enter an item name…"></label><datalist id="inventory-catalog"></datalist><label>Quantity<input id="inventory-quantity" type="number" min="0" max="9007199254740991" step="1" placeholder="Unknown"></label><button type="submit">Add Item</button></form></div>
+        <div class="filters"><label>Search Inventory<input id="inventory-search" type="search" placeholder="Search items…"></label><label>Category<select id="inventory-category"><option value="">All Items</option><option>Materials</option><option>Consumables</option><option>Equipment</option><option>Tools</option><option>Pets</option><option>Currency</option><option>Other</option></select></label><label class="check"><input type="checkbox" id="inventory-show-zero">Show Zero Quantities</label></div>
+        <p id="inventory-summary" class="note" aria-live="polite"></p><div id="inventory-rows"></div><button type="button" id="inventory-more" hidden>Show More Items</button>
+      </section>
+    </div>
+    <footer>Saved on this device · Export a backup before clearing browser data<span>Realm Idle · Character Profile</span></footer>
+  </main>
+</div>
+<dialog id="import-dialog" aria-labelledby="import-title"><h2 id="import-title">Import Character Profile</h2><p id="import-summary"></p><p>Add this as a separate character, or replace the selected character. Export a backup before replacing a character.</p><div class="actions"><button type="button" id="cancel-import">Cancel</button><button type="button" id="import-new-character">Add as New Character</button><button type="button" id="confirm-import" class="primary">Replace Profile</button></div></dialog>
+<dialog id="game-import-dialog" aria-labelledby="game-import-title"><h2 id="game-import-title">Import Game Save</h2><p id="game-import-summary"></p><div id="game-import-sections"></div><p class="note">Selected sections replace their current values. Current Gear Set optionally adds a new named set with your equipped items, rarities, pet, and blessing. Existing combat sets and your character name are preserved. Skilling gear is refreshed from owned items. Inventory quantities replace previous counts, rather than being added.</p><p class="note">The current profile is backed up in this browser before applying changes. VIP and Community Centre are snapshots at the save time, not live status.</p><div id="game-import-warnings"></div><p id="game-import-error" role="alert"></p><div class="actions"><button type="button" id="game-import-cancel">Cancel</button><button type="button" id="game-import-apply" class="primary">Import Selected Sections</button></div></dialog>
+<dialog id="skilling-picker" aria-labelledby="skilling-picker-title">
+  <div class="share-heading"><div><span id="skilling-picker-context" class="eyebrow"></span><h2 id="skilling-picker-title">Choose Gear</h2></div><button type="button" id="skilling-picker-close" aria-label="Close Gear Picker">×</button></div>
+  <div id="skilling-picker-controls"></div><div id="skilling-picker-items"></div>
+</dialog>
+<dialog id="combat-picker" aria-labelledby="combat-picker-title">
+  <div class="share-heading"><div><span id="combat-picker-context" class="eyebrow"></span><h2 id="combat-picker-title">Choose Gear</h2></div><button type="button" id="combat-picker-close" aria-label="Close Combat Picker">×</button></div>
+  <div id="combat-picker-controls"></div><div id="combat-picker-items"></div>
+</dialog>
+<dialog id="share-dialog" aria-labelledby="share-title">
+  <div class="share-heading"><h2 id="share-title">Share / Load Setup</h2><button type="button" id="share-close" aria-label="Close Share / Load Setup">×</button></div>
+  <p class="note">A code contains your entire character profile, including every named gear set. Copy it to keep a snapshot or move it to another browser. Nothing is uploaded.</p>
+  <div class="share-modes" role="group" aria-label="Setup Code Action"><button type="button" id="share-copy-mode" aria-pressed="true">Copy Code</button><button type="button" id="share-paste-mode" aria-pressed="false">Paste Code</button></div>
+  <p id="share-help" class="note">Copy the code for your current profile.</p>
+  <label for="share-text">Character Profile Code</label><textarea id="share-text" rows="7" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="share-help share-status" readonly></textarea>
+  <p id="share-status" class="note" role="status" aria-live="polite"></p>
+  <div class="actions"><button type="button" id="share-copy-btn" class="primary">Copy Code</button><button type="button" id="share-load-btn" class="primary" hidden>Load Setup</button></div>
+</dialog>
+<noscript><p class="notice">Enable JavaScript to edit and save your character profile.</p></noscript>
+</body>
+</html>

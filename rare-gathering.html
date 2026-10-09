@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Rare Gathering · Realm Idle Field Guide</title>
+  <link rel="icon" href="combat_simulator/Assets/realmidle.png">
+  <link rel="stylesheet" href="gathering/gathering.css">
+  <script defer src="gathering/gathering-data.js"></script>
+  <script defer src="gathering/gathering-model.js"></script>
+  <script defer src="gathering/gathering-app.js"></script>
+  <link rel="stylesheet" href="maintenance/navigation.css">
+<script defer src="maintenance/navigation.js"></script>
+<script defer src="maintenance/stat-colors.js"></script>
+</head>
+<body>
+<nav class="realm-nav" aria-label="Realm Idle tools"><div class="realm-nav-brand"><span class="realm-nav-label">Realm Idle Tools</span><span class="realm-nav-version">Game Version <b>4.1.3.8</b></span></div><div class="realm-nav-links"><a href="index.html">Home</a><details class="realm-nav-menu"><summary>Simulator</summary><div class="realm-nav-dropdown"><a href="character-profile.html">Character Setup</a><a href="xp-calculator.html">XP Calculator</a><a href="combat-simulator.html">Combat Simulator</a><a href="skill-boss-planner.html">Gathering Bosses</a></div></details><a href="item-catalogue.html">Item Catalogue</a><a href="forge-planner.html">Forge Planner</a><a href="rare-gathering.html" aria-current="page">Rare Gathering</a><a href="event-planner.html">Events</a></div></nav>
+
+<main>
+  <header>
+    <div class="topline"><span class="eyebrow">Realm Idle / Field Guide</span></div>
+    <div class="hero">
+      <div><h1>Rare Gathering</h1><p class="intro">A guide to bird nests, gem bags, and underwater chests. Choose your resource and equipment to see what to expect.</p></div>
+      <div class="treasures" aria-label="Bird Nest, Gem Bag, and Underwater Chest">
+        <img src="assets/gathering/bird-nest.png" alt="Bird Nest"><img src="assets/gathering/gem-bag.png" alt="Gem Bag"><img src="assets/gathering/underwater-chest.png" alt="Underwater Chest">
+      </div>
+    </div>
+    <nav aria-label="Contents"><a href="#calculator">Drop calculator</a><a href="#mechanics">How drops work</a><a href="#formula">The formula</a><a href="#resources">Resource comparison</a><a href="#source">Source notes</a></nav>
+  </header>
+
+  <section id="calculator" aria-labelledby="calculator-title">
+    <div class="section-heading"><div><span class="eyebrow">01 / Build Your Setup</span><h2 id="calculator-title">Drop Calculator</h2></div><button id="reset" type="button" class="quiet">Reset setup</button></div>
+    <noscript><p class="note">Enable JavaScript to use the calculator. The formulas and explanations below remain readable without it.</p></noscript>
+    <div class="calculator-grid">
+      <form id="setup" class="panel" novalidate>
+        <fieldset><legend>Gathering skill</legend><div class="skill-options" id="skills">
+          <label class="skill-choice"><input type="radio" name="skill" value="woodcutting" checked><img src="assets/gathering/woodcutting.png" alt=""><span>Woodcutting</span></label>
+          <label class="skill-choice"><input type="radio" name="skill" value="mining"><img src="assets/gathering/mining.png" alt=""><span>Mining</span></label>
+          <label class="skill-choice"><input type="radio" name="skill" value="fishing"><img src="assets/gathering/fishing.png" alt=""><span>Fishing</span></label>
+        </div></fieldset>
+        <div class="resource-row"><div class="art-box"><img id="resource-icon" alt="" hidden></div><label class="field" for="resource">Resource / item<select id="resource"></select><small id="resource-detail"></small></label></div>
+        <label class="field duration" for="hours">Gathering time (hours)<input type="number" id="hours" min="0" max="100000" step="any" value="1" inputmode="decimal"><small>Time actually spent gathering. 0.5 = 30 minutes. Game offline limits still apply.</small></label>
+        <div class="subheading"><h3>Pet</h3><span class="muted">One matching pet</span></div>
+        <label class="pet-choice" for="pet"><input id="pet" type="checkbox"><img id="pet-icon" alt="" hidden><span><strong id="pet-name">Matching skill boss pet</strong><small>Double the find rate (×2)</small></span></label>
+        <div class="subheading"><h3>Treasure-Find Armor</h3><span class="muted" id="gear-total">+0% total</span></div>
+        <p class="small muted">Select any combination of matching pieces. Each slot accepts one piece, with its own rarity. Other equipment has no direct treasure-find bonus.</p>
+        <div class="presets"><label class="field" for="set-preset">Fill all armor slots<select id="set-preset"></select></label><label class="field" for="rarity-preset">Set all rarities<select id="rarity-preset"></select></label></div>
+        <div id="gear-slots" class="gear-slots"></div>
+        <div class="subheading"><h3>Matching Set Tool</h3><span class="muted">The sixth piece</span></div>
+        <div class="resource-row"><div class="art-box"><img id="tool-icon" alt="" hidden><span id="tool-empty" aria-hidden="true">–</span></div><label class="field" for="set-tool">Tool<select id="set-tool"></select><small>Any tier of the matching boss tool counts as one set piece. It has no direct treasure-find bonus.</small></label></div>
+        <section class="set-bonuses" aria-labelledby="set-name"><div class="subheading"><h3 id="set-name">Set Bonuses</h3><strong id="set-count">0 / 6 pieces</strong></div><div class="set-threshold" id="three-piece"><div><strong>3 pieces</strong><span id="three-state">Locked</span></div><p>+5% gathering speed</p></div><div class="set-threshold" id="six-piece"><div><strong>6 pieces</strong><span id="six-state">Locked</span></div><p>+15% gathering speed, replacing the +5% bonus.<br><span id="six-perk-label">5% chance for triple logs</span></p></div><p><strong id="set-speed">+0% gathering speed</strong></p><p id="set-perk"></p><small>Mixing armor tiers is allowed. Rarity does not change set thresholds, and the pet does not count as a piece. Speed changes the action interval, not the hourly rare-find formula. If you enter an actual action time below, it already includes set speed.</small></section>
+        <details class="action-details"><summary>Optional: Chance per Action</summary><p class="small muted">Enter your actual time per individual gathering action, after speed bonuses. For batched actions, divide the batch time by its action count. This is only needed to calculate the per-action roll.</p><label class="field" for="action-seconds">Seconds per action<input id="action-seconds" type="number" min="0.001" step="any" placeholder="Leave blank for hourly rates only" inputmode="decimal"></label><p id="action-result" class="small"></p></details>
+        <p id="error" role="alert" hidden></p>
+      </form>
+      <aside class="results panel" aria-labelledby="results-title">
+        <div class="result-heading"><img id="drop-icon" src="assets/gathering/bird-nest.png" alt=""><div><span class="eyebrow">Your Expected Finds</span><h3 id="results-title">Bird Nests</h3></div></div>
+        <div id="result-values" aria-live="polite" aria-atomic="true">
+          <div class="primary-result"><strong id="hourly">40</strong><span>per hour</span></div>
+          <div class="secondary-results"><div><strong id="minute">0.667</strong><span>per minute</span></div><div><strong id="interval">90 s</strong><span>average per find</span></div></div>
+          <div class="session-result"><span id="session-label">In 1 hour of gathering</span><strong id="expected">40</strong><span id="expected-label">expected nests</span></div>
+        </div>
+        <p class="small muted">An average, not a timer or a guaranteed active-play total. Consecutive actions can both drop treasure.</p>
+        <section class="extra-summary" aria-labelledby="extra-title" aria-live="polite" aria-atomic="true"><h4 id="extra-title">Bonus Logs</h4><div class="extra-metric"><strong id="extra-value">0%</strong><span id="extra-unit">chance of triple logs</span></div><p id="extra-sources">Pet 0% + set 0%</p><p id="extra-session">0 extra logs per action on average.</p><small id="extra-note">Enter your actual action time to calculate extra logs per hour.</small></section>
+        <details id="gem-explanation" class="gem-explanation" hidden><summary>What Are Loose Gems?</summary><p>These are individual gems added directly to your inventory while mining by the Stone Golem pet or the matching six-piece set. Each successful bonus-gem roll awards one gem; there is no bag to open.</p><table><caption>Gem type after a successful bonus-gem roll</caption><thead><tr><th>Gem</th><th>Chance</th></tr></thead><tbody><tr><td><span class="gem-type"><img src="assets/gathering/ruby.svg" alt="" width="28" height="28">Ruby</span></td><td>34%</td></tr><tr><td><span class="gem-type"><img src="assets/gathering/sapphire.svg" alt="" width="28" height="28">Sapphire</span></td><td>29%</td></tr><tr><td><span class="gem-type"><img src="assets/gathering/emerald.svg" alt="" width="28" height="28">Emerald</span></td><td>21%</td></tr><tr><td><span class="gem-type"><img src="assets/gathering/diamond.svg" alt="" width="28" height="28">Diamond</span></td><td>11%</td></tr><tr><td><span class="gem-type"><img src="assets/gathering/topaz.svg" alt="" width="28" height="28">Topaz</span></td><td>3%</td></tr><tr><td><span class="gem-type"><img src="assets/gathering/amethyst.svg" alt="" width="28" height="28">Amethyst</span></td><td>2%</td></tr></tbody></table><p>These percentages choose which gem you receive; they are not the chance of finding a gem on each mining action. The gems/hour result above combines your pet and set bonuses and scales with the selected ore’s required level. Gem Bag finds are calculated separately.</p></details>
+        <div class="breakdown"><h4>Your Rate, Step by Step</h4><dl><div><dt>Base rate</dt><dd id="base-rate">40 / hour</dd></div><div><dt>Resource level factor</dt><dd id="level-factor">×1</dd></div><div><dt>Pet multiplier</dt><dd id="pet-factor">×1</dd></div><div><dt>Armor multiplier</dt><dd id="gear-factor">×1</dd></div></dl></div>
+        <div class="offline-result"><h4>Offline / Background Award</h4><p id="offline">40 finds for exactly 1 hour of processed gathering time.</p><small>The game counts completed actions only; leftover time and offline caps can reduce the time processed. This assumes the displayed setup applies throughout.</small></div>
+        <p id="cap-note" class="note small" hidden></p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="mechanics" class="guide-section">
+    <span class="eyebrow">02 / The Essentials</span><h2>How Rare Gathering Work</h2>
+    <div class="explain-grid">
+      <article><span class="number">01</span><h3>Better Resources, Better Rates</h3><p>The formula uses the resource’s <strong>required level</strong>, not your character’s level. Higher-tier trees, ore veins, and fish give more finds per hour. At the highest resource tier, the level factor reaches ×1.</p></article>
+      <article><span class="number">02</span><h3>Speed Balances Itself Out</h3><p>Faster gathering gives more rolls, but each roll has a proportionally smaller chance. Tools, speed potions, and weather speed bonuses therefore do not normally raise the expected treasure rate per hour.</p></article>
+      <article><span class="number">03</span><h3>No Cooldown between Finds</h3><p>Active play rolls independently for each completed action, awarding at most one container per action. Two consecutive actions can both succeed. “One nest every 90 seconds” is an average, not a scheduled drop.</p></article>
+      <article><span class="number">04</span><h3>Offline Uses Expected Totals</h3><p>Offline and background gathering calculate the expected count, give the whole-number portion, then roll for one more using the fraction. An expectation of 12.7 gives 12 finds, plus a 70% chance of a 13th.</p></article>
+    </div>
+    <div class="note"><strong>What actually increases finds?</strong> The resource tier, a matching Elder Treant / Stone Golem / Kraken pet, and matching treasure-find armor. General luck, VIP luck, combat drop bonuses, and pet whistles are not used by this formula. Armor set perks do not add another treasure-find multiplier.</div>
+  </section>
+
+  <section id="formula" class="guide-section">
+    <span class="eyebrow">03 / Under the Hood</span><h2>One Formula, Three Treasures</h2>
+    <div class="formula-box"><div class="formula-label">Expected finds per hour</div><div class="equation">B × (0.35 + 0.65 × L ÷ L<sub>max</sub>) × (1 + P) × (1 + G)</div><p>Expected total = hourly rate × gathering hours</p></div>
+    <div class="formula-columns"><dl class="definitions"><div><dt>B</dt><dd>Base finds per hour, listed below.</dd></div><div><dt>L</dt><dd>Required level of the selected resource.</dd></div><div><dt>L<sub>max</sub></dt><dd>Required level of the last resource in that skill’s list.</dd></div><div><dt>P</dt><dd>Matching equipped pet bonus: 1 for the relevant boss pet; 0 otherwise.</dd></div><div><dt>G</dt><dd>Total treasure-find bonus from matching equipped armor, expressed as a decimal.</dd></div></dl>
+    <div class="table-wrap"><table><caption>Rates at the highest resource tier, without bonuses</caption><thead><tr><th>Skill / find</th><th>B</th><th>L<sub>max</sub></th></tr></thead><tbody>
+      <tr><td><span class="table-item"><img src="assets/gathering/bird-nest.png" alt=""><span>Woodcutting<small>Bird Nest</small></span></span></td><td>40/hour</td><td>122</td></tr>
+      <tr><td><span class="table-item"><img src="assets/gathering/gem-bag.png" alt=""><span>Mining<small>Gem Bag</small></span></span></td><td>30/hour</td><td>122</td></tr>
+      <tr><td><span class="table-item"><img src="assets/gathering/underwater-chest.png" alt=""><span>Fishing<small>Underwater Chest</small></span></span></td><td>24/hour</td><td>128</td></tr>
+    </tbody></table></div></div>
+    <h3>What If Higher-Level Resources Are Added?</h3><p>The game takes L<sub>max</sub> from the <strong>last resource in the skill’s list</strong>. If an update appends a higher-level resource and leaves this formula unchanged, existing resources produce fewer rare finds per hour because their L stays the same while L<sub>max</sub> rises. For example, raising woodcutting’s maximum resource level from 122 to 150 would reduce unboosted Aeonwood from 40 to about <strong>35.15 nests/hour</strong>. The new level-150 resource would receive 40/hour. This guide uses the bundled 4.1.3.8 resource list.</p>
+    <h3>Armor: Add Pieces, Then Multiply</h3><p>For each equipped piece: <strong>bonus = base + (rarity multiplier − 1) × scaling</strong>. Add the pieces to obtain G. Pet and armor multipliers multiply each other; the armor pieces themselves add together.</p>
+    <div class="table-wrap"><table><caption>Per-piece values for the three armor tiers</caption><thead><tr><th>Woodcutting</th><th>Mining</th><th>Fishing</th><th>Base</th><th>Scaling</th></tr></thead><tbody><tr><td>Sapling</td><td>Slate</td><td>Reef</td><td>0.01</td><td>0.006</td></tr><tr><td>Heartwood</td><td>Jade</td><td>Deepsea</td><td>0.02</td><td>0.008</td></tr><tr><td>Elderwood</td><td>Obsidian</td><td>Leviathan</td><td>0.03</td><td>0.010</td></tr></tbody></table></div>
+    <p class="example"><strong>Example:</strong> Five Common Elderwood pieces give G = 5 × 0.03 = 0.15. With Aeonwood and Elder Treant equipped: 40 × 1 × 2 × 1.15 = <strong>92 nests/hour</strong>.</p>
+    <h3>Set Bonuses Are Included, without Double-Counting Speed</h3><p>Three matching armor/tool pieces grant +5% gathering speed. At six pieces (five armor pieces and a matching boss tool), that becomes +15%, plus half of the boss pet’s extra-resource perk: a 5% triple-log chance, up to 6 pearls/hour, or up to 10 loose gems/hour. Pet and set perks add together. Pearl/gem rates also use the resource level factor.</p><p>Neither threshold grants <code>treasure_find</code>. The set therefore contributes <strong>×1 to the nest/bag/chest formula</strong>. Its speed bonus is added to the gear gathering-speed bonus; faster actions then have proportionally smaller rare-drop chances. For example, adding a Treant Axe to the five-piece Elderwood example still gives <strong>92 nests/hour</strong>, while unlocking +15% set speed and raising the equipped pet’s triple-log chance from 10% to 15%.</p>
+    <details><summary>Per-Action Chance, Caps, and Timing Details</summary><p>Active-play chance = min(1, hourly rate × adjusted action seconds ÷ 3,600). A successful roll grants one container. The pet doubles the chance rather than granting two containers from one success.</p><p>The hourly formula describes productive gathering time. UI tick timing and incomplete actions can slightly lower results per wall-clock hour. If an unusually long action would give a probability above 100%, active play is capped at one find per action; the optional action-time field shows that cap. Offline/background awards use the uncapped expected total and stochastic rounding instead.</p><p>Opening a container uses separate loot tables. This calculator estimates how many containers you find, not their contents, pet bonus pearls/gems, or skill-boss rewards.</p></details>
+  </section>
+
+  <section id="resources" class="guide-section"><span class="eyebrow">04 / Choose Your Resource</span><h2>Compare Resources</h2><p id="comparison-caption">Compare the selected skill’s resources with the pet and armor setup above.</p><div class="table-wrap"><table><thead><tr><th>Resource / item</th><th>Required level</th><th>Level factor</th><th>Finds/hour</th></tr></thead><tbody id="resource-table"></tbody></table></div></section>
+
+  <p class="guide-section"><strong>4.1.3.8 check:</strong> nest, gem-bag and underwater-chest rates are unchanged. Empty Bird Nest demand is lower because every Production Potion recipe now needs one nest. Faster gathering actions do not multiply treasure finds per hour.</p><section id="source" class="guide-section"><span class="eyebrow">05 / Source Notes</span><h2>Built from the Game’s Bundled Code</h2><p>All rates, resources, armor values, pet bonuses, rarity multipliers, and artwork come from the supplied <strong>Realm Idle 4.1.3.8 APK</strong>. This is a version-specific reference; it does not query the live game.</p><details><summary>Code References and the Original Formula</summary><p>References are to <code>src/assets/public/index.html</code> in the accompanying project.</p><ul><li>Resource and rarity definitions: <code>GATHERING</code> and <code>RARITIES</code>.</li><li>Treasure armor and pets: <code>EQUIPMENT</code> and <code>SKILL_PETS</code>.</li><li>Treasure rates and awards: <code>TREASURE_FINDS</code>, <code>_treasureChance</code>, <code>rollTreasureFind</code> and <code>_treasureCount</code>.</li><li>Armor bonus calculation: <code>gearTreasureFind</code>.</li><li>Active, cold-offline and background action paths use the same hourly treasure rules.</li></ul><pre><code>return t.perHour
+  * (0.35 + 0.65 * ((action?.level || 1) / maxLvl))
+  * (activeMs / 3600000)
+  * petFind
+  * gearFind;</code></pre><p class="small">The calculator uses the source’s full precision; displayed results are rounded. Game artwork is included as original PNGs and extracted SVGs. Artwork belongs to its respective owner.</p></details></section>
+  <footer>Realm Idle field guide · Works offline · </footer>
+</main>
+</body>
+</html>
