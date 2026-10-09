@@ -95,12 +95,26 @@ function makeContext(raw,seed){
  return {c,m,g,env,r};
 }
 function candyAt(c,kind,time){const row=c.candies.find(x=>R.CANDY_DEFS[x.name].kind===kind);return row&&(c.infiniteCandies||time<row.minutes*60000)?R.CANDY_DEFS[row.name].value*row.strength:0;}
+// Expected attacks from independent damage rolls, including overkill and zero rolls.
+// Group equal-weight adjacent damage values so uniform ranges use prefix sums.
+function expectedAttacks(hp, rolls){
+ if(hp<=0)return 0;
+ if(!rolls.some(d=>d>0))return Infinity;
+ if(rolls.every(d=>d>=hp))return 1;
+ const counts=new Map();for(const d of rolls){const v=Math.min(hp,Math.max(0,d));counts.set(v,(counts.get(v)||0)+1);}
+ const groups=[];for(const [damage,count] of [...counts].sort((a,b)=>a[0]-b[0])){if(!damage)continue;const last=groups.at(-1);if(last&&last.end+1===damage&&last.count===count)last.end=damage;else groups.push({start:damage,end:damage,count});}
+ // Large sparse ranges are quantized to keep editing responsive (about 1% of mean damage or less).
+ if(hp*groups.length>20000000){const mean=rolls.reduce((a,b)=>a+b,0)/rolls.length,q=Math.min(Math.ceil(hp/4096),Math.floor(mean/100));if(q>1)return expectedAttacks(Math.ceil(hp/q),rolls.map(d=>Math.round(d/q)));}
+ const prefix=new Float64Array(hp+1),positive=rolls.length-(counts.get(0)||0);let expected=0;
+ for(let h=1;h<=hp;h++){let sum=0;for(const g of groups){if(g.start>=h)break;const hi=h-g.start,lo=Math.max(0,h-g.end);sum+=g.count*(prefix[hi]-(lo?prefix[lo-1]:0));}expected=(rolls.length+sum)/positive;prefix[h]=prefix[h-1]+expected;}
+ return expected;
+}
 function snapshot(raw){
  const ctx=makeContext(raw),{c,m,g,env,r}=ctx;
  env.candy=candyAt(c,'dmg',0);
  const stats=r.getPlayerStats(),pb=r.getPrayerBonuses(),cap=Math.max(1,r.getMaxHit(stats)-Math.floor(m.def*.3)),min=r.getMinHit(cap);
  const transform=d=>{if(m.boss&&pb.boss_dmg)d=Math.floor(d*(1+pb.boss_dmg));d=Math.floor(d*r.getBestiaryDmgMult(m.name));return Math.floor(d*(1+ (env.weather[r.getCombatStyle()+'_dmg']||0))*(1+env.candy))+r.getPetFlatDmg();};
- let total=0;for(let n=min;n<=cap;n++)total+=transform(n);
+ const damageRolls=[];let total=0;for(let n=min;n<=cap;n++){const damage=transform(n);damageRolls.push(damage);total+=damage;}
  const avg=total/(cap-min+1),walk=r.getZoneWalkMult(c.zone);
  const drSources={blessing:pb.dmg_reduction||0,potion:g.activeEffects.find(e=>e.stat==='damage_reduction'&&e.msLeft>0)?.value||0,museum:stats.museumDR||0,blessingPenalty:-(pb.dmg_increase||0),gearPenalty:-(stats.drPenalty||0)};
  const netDR=Object.values(drSources).reduce((sum,value)=>sum+value,0);
@@ -118,7 +132,8 @@ function snapshot(raw){
  if(c.mode!=='active'&&c.candies.length)warnings.push('Away combat uses each candy’s session-weighted bonus throughout, matching the game’s span handling.');
  if(c.mode==='offline'&&c.hpPercent!==100)warnings.push('Cold offline starts at full HP, as the game’s offline calculation does. The starting HP setting applies to active and background play.');
  if(c.infiniteFood||c.infiniteAmmo||c.infinitePotions||c.infiniteCandies)warnings.push('Unlimited supplies enabled: this is a sustained-farming scenario.');
- return {stats,hp:g.maxHp,pb,defense,range:{min:transform(min),max:transform(cap)},average:avg,dps:avg/.6,walk,walkSeconds:1.5*walk,delay:.8+1.5*walk,walkParts:{lodge:r.getZoneWalkReduction(c.zone),boss:r.getZoneBossWalkReduction(c.zone),pet:r.getPetWalkSpeed()},incomingMax:r._maxIncomingHit(m,stats,pb),enemyHitChance:penetration,bestiary:r.getBestiaryBonus(m.name),style:r.getCombatStyle(),warnings,museum:r.getMuseumBonus(),vampire:r.vampireSetBonus()};
+ const attacks=expectedAttacks(m.hp,damageRolls),estimatedKph=(r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo?0:3600/(attacks*.6+.8+1.5*walk);
+ return {estimatedKph,expectedAttacks:attacks,stats,hp:g.maxHp,pb,defense,range:{min:transform(min),max:transform(cap)},average:avg,dps:avg/.6,walk,walkSeconds:1.5*walk,delay:.8+1.5*walk,walkParts:{lodge:r.getZoneWalkReduction(c.zone),boss:r.getZoneBossWalkReduction(c.zone),pet:r.getPetWalkSpeed()},incomingMax:r._maxIncomingHit(m,stats,pb),enemyHitChance:penetration,bestiary:r.getBestiaryBonus(m.name),style:r.getCombatStyle(),warnings,museum:r.getMuseumBonus(),vampire:r.vampireSetBonus()};
 }
 function simulate(raw,seed){
  const {c,m,g,env,r}=makeContext(raw,seed),random=env.random,roll=(a,b)=>Math.floor(random()*(b-a+1))+a;
@@ -203,6 +218,6 @@ function aggregate(runs,c){
  return {n:runs.length,kph:mean('kph'),kphLow:percentile('kph',.05),kphHigh:percentile('kph',.95),meanError:1.96*sd/Math.sqrt(runs.length),kills:mean('kills'),food:mean('food'),ammo:mean('ammo'),gold:mean('gold'),xp:mean('xp'),defenseXP:mean('defenseXP'),damage:mean('damage'),taken:mean('taken'),attacks:mean('attacks'),walkMs:mean('walkMs'),deathMs:mean('deathMs'),endingHp:mean('endingHp'),deathChance:runs.filter(r=>r.stop==='death').length/runs.length,ammoChance:runs.filter(r=>r.stop==='ammo').length/runs.length,stopAt:mean('stopAt'),loot,example:runs[Math.floor(runs.length/2)]};
 }
 async function run(raw,onProgress=()=>{},cancel=()=>false){const c=normalize(raw),runs=[];for(let i=0;i<c.trials;i++){if(cancel())return null;runs.push(simulate(c,(c.seed+Math.imul(i,2654435761))>>>0));onProgress(i+1,c.trials);await new Promise(resolve=>setTimeout(resolve,0));}return aggregate(runs,c);}
-root.CombatSim={defaults,normalize,snapshot,simulate,aggregate,run,makeContext,rng,slots,skillNames,petGroups,combatBlessings};
+root.CombatSim={expectedAttacks,defaults,normalize,snapshot,simulate,aggregate,run,makeContext,rng,slots,skillNames,petGroups,combatBlessings};
 if(typeof module!=='undefined')module.exports=root.CombatSim;
 })(globalThis);
