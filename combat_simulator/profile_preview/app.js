@@ -204,14 +204,6 @@ document.addEventListener('click',e=>{
  case 'apply-lodge':for(const m of R.MONSTERS[config.zone])config.killLog[m.name]=+$('lodge-tier').value;changed();break;
  case 'pin-result':if(baseline){removePin();break;}if(result){baseline=cloneConfig({name:R.MONSTERS[resultConfig.zone].find(m=>m.id===resultConfig.target).name,mode:resultConfig.mode,minutes:resultConfig.minutes,result,config:resultConfig});let saved=true;try{localStorage.setItem(CharacterProfile.scopedKey('realm-public-combat-profile-preview-baseline'),JSON.stringify(baseline));}catch{saved=false;}renderComparison();updateResultState();toast(saved?'Full result pinned above the current forecast.':'Result pinned for this visit; browser storage is unavailable.');}break;
  case 'clear-baseline':removePin();break;
- case 'export-btn':{const blob=new Blob([setupJSON()],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='realm-combat-setup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);break;}
- case 'share-btn':openShare();break;
- case 'share-copy-mode':setShareMode('copy');break;
- case 'share-paste-mode':setShareMode('paste');break;
- case 'share-copy-btn':copyShare();break;
- case 'share-load-btn':loadShare();break;
- case 'import-btn':$('import-file').click();break;
- case 'reset-btn':config=E.defaults();changed();toast('Default setup restored. Your pinned comparison is kept.');break;
  }
 });
 document.addEventListener('input',e=>{
@@ -234,7 +226,7 @@ document.addEventListener('input',e=>{
  else return;
  restoredSetup=false;save();invalidateResults();
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){let dismissed=false;for(const card of document.querySelectorAll(helpCardSelector))if(!card.querySelector('[role="tooltip"]').hidden){card.querySelector('.block-help-toggle').dataset.pinned='false';showMetricHelp(card,false);dismissed=true;}if(dismissed){e.preventDefault();return;}for(const id of ['picker','method','share-dialog'])if($(id).open){e.preventDefault();$(id).close();break;}}},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){let dismissed=false;for(const card of document.querySelectorAll(helpCardSelector))if(!card.querySelector('[role="tooltip"]').hidden){card.querySelector('.block-help-toggle').dataset.pinned='false';showMetricHelp(card,false);dismissed=true;}if(dismissed){e.preventDefault();return;}for(const id of ['picker','method'])if($(id).open){e.preventDefault();$(id).close();break;}}},true);
 document.addEventListener('change',e=>{const x=e.target;
  if(x.dataset.candyKind){const kind=x.dataset.candyKind,key=x.dataset.candyKey,row=config.candies.find(c=>R.CANDY_DEFS[c.name].kind===kind);if(key==='name'){config.candies=config.candies.filter(c=>R.CANDY_DEFS[c.name].kind!==kind);if(x.value)config.candies.push({name:x.value,minutes:R.CANDY_DEFS[x.value].duration/60000,strength:row?.strength??.5});}else if(row)row[key]=+x.value;changed();return;}
  if(x.dataset.path){const parts=x.dataset.path.split('.');let at=config;for(const p of parts.slice(0,-1))at=at[p];at[parts.at(-1)]=x.type==='checkbox'?x.checked:x.type==='number'?+x.value:x.value;changed();return;}
@@ -244,38 +236,7 @@ document.addEventListener('change',e=>{const x=e.target;
  if(x.dataset.museum){config.museumByStyle[x.dataset.museumFor][x.dataset.museum]=+x.value/(x.dataset.museum==='rngBonus'?1:100);changed();return;}
  if(x.dataset.percent){config[x.dataset.percent]=+x.value/100;changed();return;}
 });
-$('import-file').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{if(f.size>2000000)throw Error('Setup file is too large.');config=readSetupJSON(await f.text());changed();toast('Setup imported.');}catch(err){toast('Could not import: '+err.message);}e.target.value='';});
-let shareMode='copy',shareCode='',shareDraft='',shareGeneration=0;
-function setupJSON(){return JSON.stringify({simulator:'Realm Idle Combat Lab',version:1,config:E.normalize(config)},null,2);}
-function readSetupJSON(text){
- if(new TextEncoder().encode(text).length>2000000)throw Error('Setup is too large.');
- let data;try{data=JSON.parse(text);}catch{throw Error('Invalid setup JSON.');}
- if(data?.simulator!=='Realm Idle Combat Lab'||data.version!==1||!data.config?.equip||typeof data.config.equip!=='object'||Array.isArray(data.config.equip))throw Error('Use a Combat Lab setup, not a game save.');
- return E.normalize(data.config);
-}
-function setShareMode(mode){
- if(shareMode==='paste')shareDraft=$('share-text').value;
- shareMode=mode;$('share-text').readOnly=mode==='copy';$('share-text').value=mode==='copy'?shareCode:shareDraft;
- $('share-copy-mode').setAttribute('aria-pressed',mode==='copy');$('share-paste-mode').setAttribute('aria-pressed',mode==='paste');
- $('share-copy-btn').hidden=mode!=='copy';$('share-load-btn').hidden=mode!=='paste';
- $('share-help').textContent=mode==='copy'?'Copy this code to share your current setup.':'Paste a Combat Lab setup code below, then load it.';
- $('share-status').textContent='';$('share-text').focus();if(mode==='copy')$('share-text').select();
-}
-async function openShare(){
- const generation=++shareGeneration;shareDraft='';shareCode='';shareMode='copy';$('share-dialog').showModal();setShareMode('copy');$('share-copy-btn').disabled=true;$('share-status').textContent='Preparing setup code…';
- try{const code=await SetupCodec.encode(setupJSON());if(generation!==shareGeneration)return;shareCode=code;$('share-copy-btn').disabled=false;if(shareMode==='copy'){$('share-text').value=code;$('share-status').textContent='';}}catch(err){$('share-status').textContent=err.message;}
-}
-async function copyShare(){
- try{await navigator.clipboard.writeText(shareCode);$('share-status').textContent='Setup code copied.';}
- catch{$('share-text').focus();$('share-text').select();$('share-status').textContent='Code selected. Press Ctrl+C or use your browser’s Copy command.';}
-}
-async function loadShare(){
- $('share-load-btn').disabled=true;$('share-status').textContent='Reading setup code…';
- try{const text=await SetupCodec.decode($('share-text').value),loaded=readSetupJSON(text);if(!$('share-dialog').open)return;config=loaded;changed();$('share-dialog').close();toast('Setup loaded from code.');}
- catch(err){$('share-status').textContent=err.message;}
- finally{$('share-load-btn').disabled=false;}
-}
 function cloneConfig(x){return JSON.parse(JSON.stringify(x));}
-for(const id of ['picker','method','share-dialog'])$(id).addEventListener('click',e=>{if(e.target===$(id)){const rect=$(id).getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)$(id).close();}});
+for(const id of ['picker','method'])$(id).addEventListener('click',e=>{if(e.target===$(id)){const rect=$(id).getBoundingClientRect();if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom)$(id).close();}});
 refresh();
 // The preview waits for the user to run a simulation.
