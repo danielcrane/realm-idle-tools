@@ -2,7 +2,7 @@
 const label=s=>s.replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
 function describe(data,name,tier){
  const eq=data.gear[name],tool=data.tools[name];if(!eq&&!tool)return null;
- const fixed=!!eq&&(eq.infinite||eq.slot==='ammo'&&!!eq.magicMult&&!eq.rune);
+ const fixed=!!eq&&!eq.rune&&(eq.infinite||eq.slot==='ammo'&&!!eq.magicMult);
  const sources=data.rows.filter(r=>r.item===name),minimum=sources.length?Math.min(...sources.map(r=>r.minRarity||1)):1;
  const rarity=data.rarities.find(r=>r.tier===(fixed?1:Math.max(minimum,Number(tier)||minimum)))||data.rarities[0],m=rarity.mult,stats=[];
  const add=(key,name,value,format='flat')=>stats.push({key,label:name,value,format});
