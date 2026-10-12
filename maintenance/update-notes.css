@@ -16,5 +16,7 @@
 .gathering-note-table table{margin:0;width:100%;font-size:.9rem}
 .gathering-note-table caption{padding:14px 12px 0}
 .gathering-note-table th,.gathering-note-table td{padding:10px 12px}
-.gathering-note-table td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.gathering-note-table th:first-child{text-align:left}
+.gathering-note-table th:not(:first-child),.gathering-note-table td{text-align:right;font-variant-numeric:tabular-nums}
+.gathering-note-table td{white-space:nowrap}
 @media(max-width:480px){.gathering-note-table th,.gathering-note-table td{padding:10px 8px}.gathering-table-hint{display:none}.gathering-note-table summary{padding:12px}}
