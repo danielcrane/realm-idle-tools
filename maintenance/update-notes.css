@@ -20,6 +20,7 @@
 .gathering-note-table th:not(:first-child),.gathering-note-table td{text-align:right;font-variant-numeric:tabular-nums}
 .gathering-note-table td{white-space:nowrap}
 .boss-note-content{padding:0 12px 12px}
-.boss-note-content table{margin-bottom:16px}
+.boss-note-content table{width:min(100%,360px);margin-bottom:16px}
+.boss-note-content th,.boss-note-content td{padding:7px 10px}
 .boss-note-content .note-formula{font-size:.8rem}
 @media(max-width:480px){.gathering-note-table th,.gathering-note-table td{padding:10px 8px}.gathering-table-hint{display:none}.gathering-note-table summary{padding:12px}}
