@@ -128,7 +128,7 @@ function snapshot(raw){
  const warnings=[];
  if((r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo)warnings.push('Equip compatible arrows, a spell, or a rune before simulating.');
  if(c.zone==='haunted')warnings.push('Haunted Hollow is a hypothetical open-portal encounter here; seasonal access and portal expiry are not simulated.');
- if(c.progression&&c.mode!=='active')warnings.push('Away modes hold combat levels and bestiary bonuses at their starting values, matching their cached combat context.');
+ if(c.progression&&c.mode!=='active')warnings.push('Away modes apply combat level-ups; maximum HP, walking and bestiary bonuses remain fixed during this simulation.');
  if(c.mode!=='active'&&c.candies.length)warnings.push('Away combat uses each candy’s session-weighted bonus throughout, matching the game’s span handling.');
  if(c.mode==='offline'&&c.hpPercent!==100)warnings.push('Cold offline starts at full HP, as the game’s offline calculation does. The starting HP setting applies to active and background play.');
  if(c.infiniteFood||c.infiniteAmmo||c.infinitePotions||c.infiniteCandies)warnings.push('Unlimited supplies enabled: this is a sustained-farming scenario.');
@@ -155,10 +155,10 @@ function simulate(raw,seed){
   const luck=r.getLuckMultiplier(),goldBoost=(g.activeEffects.find(e=>e.stat==='gold_boost')?.value||0)+r.getPetGoldBoost()+(env.weather.gold||0);
   out.gold+=Math.floor((c.mode==='offline'?(m.gold[0]+m.gold[1])/2:roll(...m.gold))*luck*(1+goldBoost));
   const xp=m.xp*xpMult();out.xp+=xp;out.defenseXP+=xp*.7;
-  for(const d of m.drops){const chance=Math.min(1,d.c*luck*r.getBestiaryDropMult(m.name)*(1+c.communityDrops));const qty=c.mode==='offline'?Math.floor((d.q[0]+d.q[1])/2):(d.q[0]+d.q[1])/2;const bone=boneNames.has(d.item)?1+r.getPetBoneDouble():1;out.loot[d.item]=(out.loot[d.item]||0)+chance*qty*bone*(1+(env.weather.double_drop||0));}
-  if(c.mode==='active'&&c.progression){
-   const before=g.maxHp,skills=r.isUsingMagic()?['magic']:r.isUsingRanged()?['ranged']:['attack','strength'];for(const s of skills)g.skills[s]+=xp;g.skills.defense+=xp*.7;g.maxHp=R.getMaxHpFor(R.getLevel(g.skills.defense));g.hp=Math.min(g.maxHp,g.hp+g.maxHp-before);
-   if(m.boss&&!g.bossesKilled.includes(m.id))g.bossesKilled.push(m.id);
+  for(const d of m.drops){const chance=Math.min(1,d.c*luck*r.getBestiaryDropMult(m.name)*(1+c.communityDrops));const qty=(d.q[0]+d.q[1])/2;const bone=boneNames.has(d.item)?1+r.getPetBoneDouble():1;out.loot[d.item]=(out.loot[d.item]||0)+chance*qty*bone*(1+(env.weather.double_drop||0));}
+  if(c.progression){
+   const before=g.maxHp,skills=r.isUsingMagic()?['magic']:r.isUsingRanged()?['ranged']:['attack','strength'];for(const s of skills)g.skills[s]+=xp;g.skills.defense+=xp*.7;if(c.mode==='active'){g.maxHp=R.getMaxHpFor(R.getLevel(g.skills.defense));g.hp=Math.min(g.maxHp,g.hp+g.maxHp-before);}else cached=refresh();
+   if(c.mode==='active'&&m.boss&&!g.bossesKilled.includes(m.id))g.bossesKilled.push(m.id);
   }
  }
  env.onKill=award;

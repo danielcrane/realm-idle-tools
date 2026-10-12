@@ -24,7 +24,8 @@ const GatheringModel = (() => {
     }
     const resource = resources[resourceIndex];
     const maximumLevel = resources[resources.length - 1].level;
-    const levelFactor = 0.35 + 0.65 * resource.level / maximumLevel;
+    const levelFactor = 0.35 * Math.pow(5, resource.level / maximumLevel);
+    const perkLevelFactor = 0.35 + 0.65 * resource.level / maximumLevel;
     const petBonus = pet ? data.pets.find(p => p.skill === skill).bonus.treasure_find : 0;
     const setSpeed = setPieces >= 6 ? 0.15 : setPieces >= 3 ? 0.05 : 0;
     const bossPet = data.pets.find(p => p.name === set.pet).bonus;
@@ -43,7 +44,7 @@ const GatheringModel = (() => {
     const chance = actionSeconds === null ? null : Math.min(1, hourly * actionSeconds / 3600);
     return {hourly, perMinute:hourly/60, secondsPerDrop:3600/hourly, expected, levelFactor, gearTotal, petBonus,
       setPieces, setSpeed, setPerk, petPerk, combinedPerk, perkKey,
-      extraPerHour:perkKey==='wc_triple'?null:combinedPerk*levelFactor,
+      extraPerHour:perkKey==='wc_triple'?null:combinedPerk*perkLevelFactor,
       offlineWhole, offlineFraction, chance, activeHourly:chance === null ? null : chance * 3600 / actionSeconds};
   }
   return {gearBonus, calculate};

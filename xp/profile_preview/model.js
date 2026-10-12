@@ -37,7 +37,7 @@
    if(max<=0){
     let expired=false;if(finite&&p.potion.value&&speedOn&&speedMs<tm.interval){speedMs=0;expired=true;}if(finite&&p.xpPotion.value&&xpOn&&xpMs<tm.interval){xpMs=0;expired=true;}if(expired)continue;break;
    }
-   const gain=batches=>{const n=batches*tm.batch;return n*p.a.xp*st.xpMult+M.petXp(p,n,(finite||s.timingMode==='offline')?st.xpAll:st.xpMult,finite);};
+   const gain=batches=>{const n=batches*tm.batch;return n*p.a.xp*st.xpMult+M.petXp(p,n,st.xpMult,finite);};
    const boundary=Math.min(target,level<130?R.getXPFor(level+1):Infinity);
    let n=max;
    if(Number.isFinite(boundary)){

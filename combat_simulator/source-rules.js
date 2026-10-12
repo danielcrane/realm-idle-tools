@@ -1,4 +1,4 @@
-/* GENERATED from bundled Realm Idle 4.1.3.8. Run node tools/extract.cjs. */
+/* GENERATED from bundled Realm Idle 4.1.3.9. Run node tools/extract.cjs. */
 (function(root){ 'use strict';
 const CC_TIERS = [
   {at:5000,  key:'gather', label:'+5% Gathering Speed'},
@@ -893,8 +893,11 @@ const WORLD_BOSS = {
   keyDropChance:0.05,                    
   gearMinRarity:14,                      
   weekDmgCap:50000000,                   
-  cacheDmgTarget:1500000,                
-  cacheMaxChance:0.75,                   
+  
+  
+  cacheKneeDmg:1500000, cacheKneeChance:0.75,
+  cacheDmgTarget:3000000,                
+  cacheMaxChance:0.90,                   
   gearWeapons:["Ashlyn's Greatsword","Ashlyn's Longbow","Ashlyn's Staff"],
   
   gearMelee:["Ashlyn's Cuirass","Ashlyn's Greaves","Ashlyn's Gauntlets","Ashlyn's Boots"],
@@ -2279,6 +2282,7 @@ for(const [_pn, _pd] of Object.entries(POTIONS)){
 WORLD_BOSS.gearArmor = ["Ashlyn's Crown", ...WORLD_BOSS.gearMelee, ...WORLD_BOSS.gearRanged, ...WORLD_BOSS.gearMagic];
 const CANDY_DEFS = {};
 for(const [tier,t] of Object.entries(CANDY_TIERS)) for(const [kind,k] of Object.entries(CANDY_KINDS)) { const name=tier+' '+k.label+' Candy'; CANDY_DEFS[name]={name,tier,kind,value:t[kind],duration:t.mins*60000,icon:'candy_'+kind}; }
+const _matTierCache = new Map();
 const getLevel=xp=>{if(!xp||xp<=0)return 1;let l=1,t=0;while(l<130){const base=Math.floor(l+300*Math.pow(2,l/7));let mult=1;if(l<10)mult=0.3;else if(l<20)mult=0.65;else if(l<30)mult=0.85;else if(l<40)mult=0.93;else mult=1;const n=Math.floor(base*mult);if(t+n>xp)break;t+=n;l++}return l};
 const getXPFor=l=>{if(l>130)l=130;let t=0;for(let i=1;i<l;i++){const base=Math.floor(i+300*Math.pow(2,i/7));let mult=1;if(i<10)mult=0.3;else if(i<20)mult=0.65;else if(i<30)mult=0.85;else if(i<40)mult=0.93;else mult=1;t+=Math.floor(base*mult)}return Math.floor(t)};
 const hpPerDefLvl = l => l <= 50 ? 5 : 5 + Math.ceil((l - 50) / 8);
@@ -2287,13 +2291,18 @@ function getRarityByTier(tier){
   return RARITIES.find(r => r.tier === tier) || RARITIES[0];
 }
 function getItemMaterialTier(name) {
+  if(_matTierCache.has(name)) return _matTierCache.get(name);
   
-  if(FORGE_MATERIAL_TIER[name] !== undefined) return FORGE_MATERIAL_TIER[name];
-  
-  for(const [prefix, tier] of Object.entries(FORGE_MATERIAL_TIER)){
-    if(name.startsWith(prefix + ' ') || name.startsWith(prefix + '\t')) return tier;
+  let t = FORGE_MATERIAL_TIER[name];
+  if(t === undefined){
+    t = null;
+    
+    for(const [prefix, tier] of Object.entries(FORGE_MATERIAL_TIER)){
+      if(name.startsWith(prefix + ' ') || name.startsWith(prefix + '\t')){ t = tier; break; }
+    }
   }
-  return null;
+  _matTierCache.set(name, t);
+  return t;
 }
 function museumRarityFactor(r){ const x = Math.max(0, getRarityByTier(r).mult - 1); return Math.max(0.01, (x*x)/6.2); }
 function museumFamilies(name){
@@ -3127,6 +3136,16 @@ function _autoEatFoods(){
 }
 function getBestFood(){ return _autoEatFoods()[0] || null; }
 function _isKeptAmmo(name){ return !!(game && Array.isArray(game.keptAmmo) && game.keptAmmo.includes(name)); }
+function _isKeptAmmoTier(name, tier){ return _isKeptAmmo(name) || !!(game && game.keptAmmoTiers && (game.keptAmmoTiers[name] || []).includes(tier)); }
+function _ammoTiers(name){
+  const tiers = game.itemRarities && game.itemRarities[name];
+  if(!tiers || _isKeptAmmo(name)) return [];
+  return Object.keys(tiers).map(Number).filter(t => tiers[t] > 0 && !_isKeptAmmoTier(name, t)).sort((a, b) => game.ammoWorstFirst ? a - b : b - a);
+}
+function _ammoPickTier(name, worst){
+  const ts = _ammoTiers(name);
+  return ts.length ? (worst ? Math.min(...ts) : Math.max(...ts)) : undefined;
+}
 function _dropKeptAmmo(list){
   for(let i = list.length - 1; i >= 0; i--) if(_isKeptAmmo(list[i].name)) list.splice(i, 1);
   return list;
@@ -3135,7 +3154,7 @@ function _offlineConsumeAmmo(usingRanged, usingMagic){
   
   if((usingRanged || usingMagic) && EQUIPMENT[game.equip.ammo]?.sigil) _ejectSigilForWeapon({ranged:true});
   
-  if(game.equip.ammo && _isKeptAmmo(game.equip.ammo)){ _ammoOffKept(); if(!game.equip.ammo) return false; }
+  if(game.equip.ammo && _isKeptAmmoTier(game.equip.ammo, game.equippedRarity?.ammo || 1)){ _ammoOffKept(); if(!game.equip.ammo) return false; }
   const ammo = game.equip.ammo;
 
   
@@ -3143,14 +3162,14 @@ function _offlineConsumeAmmo(usingRanged, usingMagic){
 
   
   let consumed = false;
-  if(!_isKeptAmmo(ammo) && game.itemRarities && game.itemRarities[ammo]){
-    const availableTiers = Object.keys(game.itemRarities[ammo])
-      .map(Number)
-      .filter(t => game.itemRarities[ammo][t] > 0)
-      .sort((a,b) => game.ammoWorstFirst ? a - b : b - a);
+  if(game.itemRarities && game.itemRarities[ammo]){
+    const availableTiers = _ammoTiers(ammo);
 
     if(availableTiers.length > 0){
       const tier = availableTiers[0];
+      
+      if(!game.equippedRarity) game.equippedRarity = {};
+      game.equippedRarity.ammo = tier;
       game.itemRarities[ammo][tier]--;
       if(game.itemRarities[ammo][tier] <= 0){
         delete game.itemRarities[ammo][tier];
@@ -3163,7 +3182,7 @@ function _offlineConsumeAmmo(usingRanged, usingMagic){
   }
 
   
-  if(!consumed && !_isKeptAmmo(ammo) && game.inv[ammo] && game.inv[ammo] > 0){
+  if(!consumed && !_isKeptAmmoTier(ammo, 1) && game.inv[ammo] && game.inv[ammo] > 0){
     game.inv[ammo]--;
     if(game.inv[ammo] <= 0) delete game.inv[ammo];
     consumed = true;
@@ -3186,7 +3205,7 @@ function _ammoSwitch(usingRanged, usingMagic){
       for(const [arrowName, tiers] of Object.entries(game.itemRarities)){
         const eq = EQUIPMENT[arrowName];
         if(eq && eq.slot === 'ammo' && eq.rngBonus){
-          const tierNums = Object.keys(tiers).map(Number).filter(t => tiers[t] > 0);
+          const tierNums = _ammoTiers(arrowName);
           if(tierNums.length > 0){
             const pickedTier = game.ammoWorstFirst ? Math.min(...tierNums) : Math.max(...tierNums);
             availableArrows.push({name: arrowName, bonus: eq.rngBonus, tier: pickedTier});
@@ -3197,7 +3216,7 @@ function _ammoSwitch(usingRanged, usingMagic){
 
     
     for(const [arrowName, qty] of Object.entries(game.inv)){
-      if(qty > 0){
+      if(qty > 0 && !_isKeptAmmoTier(arrowName, 1)){
         const eq = EQUIPMENT[arrowName];
         if(eq && eq.slot === 'ammo' && eq.rngBonus){
           availableArrows.push({name: arrowName, bonus: eq.rngBonus, tier: 1});
@@ -3227,7 +3246,7 @@ function _ammoSwitch(usingRanged, usingMagic){
       for(const [spellName, tiers] of Object.entries(game.itemRarities)){
         const eq = EQUIPMENT[spellName];
         if(eq && eq.slot === 'ammo' && eq.magicMult && !eq.infinite){
-          const tierNums = Object.keys(tiers).map(Number).filter(t => tiers[t] > 0);
+          const tierNums = _ammoTiers(spellName);
           if(tierNums.length > 0){
             const pickedTier = game.ammoWorstFirst ? Math.min(...tierNums) : Math.max(...tierNums);
             availableSpells.push({name: spellName, bonus: eq.magicMult, tier: pickedTier});
@@ -3238,7 +3257,7 @@ function _ammoSwitch(usingRanged, usingMagic){
 
     
     for(const [spellName, qty] of Object.entries(game.inv)){
-      if(qty > 0){
+      if(qty > 0 && !_isKeptAmmoTier(spellName, 1)){
         const eq = EQUIPMENT[spellName];
         if(eq && eq.slot === 'ammo' && eq.magicMult && !eq.infinite){
           availableSpells.push({name: spellName, bonus: eq.magicMult, tier: 1});
@@ -3359,7 +3378,7 @@ function fightTick(){
   
   if((usingRanged || usingMagic) && EQUIPMENT[game.equip.ammo]?.sigil) _ejectSigilForWeapon({ranged:true});
   
-  if((usingRanged || usingMagic) && game.equip.ammo && _isKeptAmmo(game.equip.ammo)) _ammoOffKept();
+  if((usingRanged || usingMagic) && game.equip.ammo && _isKeptAmmoTier(game.equip.ammo, game.equippedRarity.ammo || 1)) _ammoOffKept();
   if(usingRanged){
     const ammo = game.equip.ammo;
     if(!ammo){
@@ -3379,12 +3398,9 @@ function fightTick(){
     let foundReplacement = false;
     
     
-    if(!_isKeptAmmo(ammo) && game.itemRarities && game.itemRarities[ammo]){
-      const availableTiers = Object.keys(game.itemRarities[ammo])
-        .map(Number)
-        .filter(t => game.itemRarities[ammo][t] > 0)
-        .sort((a,b) => game.ammoWorstFirst ? a-b : b-a);
-      
+    if(game.itemRarities && game.itemRarities[ammo]){
+      const availableTiers = _ammoTiers(ammo);
+
       if(availableTiers.length > 0){
         const nextTier = availableTiers[0];
         
@@ -3408,10 +3424,10 @@ function fightTick(){
     }
     
     
-    if(!foundReplacement && !_isKeptAmmo(ammo) && game.inv[ammo] && game.inv[ammo] > 0){
+    if(!foundReplacement && !_isKeptAmmoTier(ammo, 1) && game.inv[ammo] && game.inv[ammo] > 0){
       game.inv[ammo]--;
       if(game.inv[ammo] <= 0) delete game.inv[ammo];
-      
+
       game.equip.ammo = ammo;
       game.equippedRarity.ammo = 1;
       foundReplacement = true;
@@ -3429,17 +3445,17 @@ function fightTick(){
         for(const [arrowName, tiers] of Object.entries(game.itemRarities)){
           const eq = EQUIPMENT[arrowName];
           if(eq && eq.slot === 'ammo' && eq.rngBonus){
-            const bestTier = Math.max(...Object.keys(tiers).map(Number).filter(t => tiers[t] > 0));
-            if(bestTier){
-              availableArrows.push({name: arrowName, bonus: eq.rngBonus, tier: bestTier, hasRarity: true});
+            const usable = _ammoTiers(arrowName);
+            if(usable.length){
+              availableArrows.push({name: arrowName, bonus: eq.rngBonus, tier: Math.max(...usable), hasRarity: true});
             }
           }
         }
       }
-      
+
       
       for(const [arrowName, qty] of Object.entries(game.inv)){
-        if(qty > 0){
+        if(qty > 0 && !_isKeptAmmoTier(arrowName, 1)){
           const eq = EQUIPMENT[arrowName];
           if(eq && eq.slot === 'ammo' && eq.rngBonus){
             availableArrows.push({name: arrowName, bonus: eq.rngBonus, tier: 1, hasRarity: false});
@@ -3543,7 +3559,7 @@ function fightTick(){
       for(const [spellName, tiers] of Object.entries(game.itemRarities)){
         const eq = EQUIPMENT[spellName];
         if(eq && eq.slot === 'ammo' && eq.magicMult && !eq.infinite){
-          const tierNums = Object.keys(tiers).map(Number).filter(t => tiers[t] > 0);
+          const tierNums = _ammoTiers(spellName);
           if(tierNums.length > 0){
             const pickedTier = game.ammoWorstFirst ? Math.min(...tierNums) : Math.max(...tierNums);
             availableSpells.push({name: spellName, bonus: eq.magicMult, tier: pickedTier, hasRarity: true});
@@ -3553,7 +3569,7 @@ function fightTick(){
     }
     
     for(const [name, qty] of Object.entries(game.inv)){
-      if(qty > 0){
+      if(qty > 0 && !_isKeptAmmoTier(name, 1)){
         const eq = EQUIPMENT[name];
         if(eq && eq.slot === 'ammo' && eq.magicMult && !eq.infinite){
           availableSpells.push({name, bonus: eq.magicMult, tier: 1, hasRarity: false});
@@ -3975,7 +3991,7 @@ function fightTick(){
 function beginFight(m){currentFight={...m,currentHp:m.hp};isProcessingDeath=false;pending=null;}
 function activeStep(){pending=null;fightTick();return {delay:pending?.delay||0,dead:env.stop==='death',monsterHp:currentFight?.currentHp||0};}
 function resumeFight(){const p=pending;pending=null;if(p) p.fn();return {delay:pending?.delay||0,pending:!!pending};}
-return {potionKind,potionOn,getPotion,potionValue,potionMsLeft,_potionFromCharges,_potionUse,getPetDef,equippedSkillPetBonus,getPrayerBonuses,isUsingMagic,isUsingRanged,getCombatStyle,getPlayerStats,getMaxHit,getMinHitFrac,getMinHit,getHitRangeVs,_maxIncomingHit,getPetFlatDmg,getPetWalkSpeed,getPetGoldBoost,getPetBoneDouble,getLuckMultiplier,vampireSetCount,vampireSetBonus,museumUnlocked,lodgeUnlocked,getBestiaryBonus,getBestiaryDropMult,getBestiaryDmgMult,getBestiaryDefMult,getZoneWalkReduction,getZoneBossWalkReduction,getZoneWalkReductionTotal,getZoneWalkMult,getMuseumRarity,getMuseumBonus,_isKeptFood,_autoEatFoods,getBestFood,_isKeptAmmo,_dropKeptAmmo,_offlineConsumeAmmo,_ammoSwitch,collectionMuseumBonus,beginFight,activeStep,resumeFight,env,game};
+return {potionKind,potionOn,getPotion,potionValue,potionMsLeft,_potionFromCharges,_potionUse,getPetDef,equippedSkillPetBonus,getPrayerBonuses,isUsingMagic,isUsingRanged,getCombatStyle,getPlayerStats,getMaxHit,getMinHitFrac,getMinHit,getHitRangeVs,_maxIncomingHit,getPetFlatDmg,getPetWalkSpeed,getPetGoldBoost,getPetBoneDouble,getLuckMultiplier,vampireSetCount,vampireSetBonus,museumUnlocked,lodgeUnlocked,getBestiaryBonus,getBestiaryDropMult,getBestiaryDmgMult,getBestiaryDefMult,getZoneWalkReduction,getZoneBossWalkReduction,getZoneWalkReductionTotal,getZoneWalkMult,getMuseumRarity,getMuseumBonus,_isKeptFood,_autoEatFoods,getBestFood,_isKeptAmmo,_isKeptAmmoTier,_ammoTiers,_ammoPickTier,_dropKeptAmmo,_offlineConsumeAmmo,_ammoSwitch,collectionMuseumBonus,beginFight,activeStep,resumeFight,env,game};
 }
 const API={CC_TIERS,RARITIES,EQUIPMENT,MONSTERS,ZONES,POTIONS,POTION_MINUTES,POTION_KIND,FOOD_HEALS,BONE_TYPES,EVENT_PETS,BOSS_PETS,SKILL_PETS,MONSTER_PETS,PRAYERS,TOME_UNLOCKED_PRAYERS,BESTIARY_TIERS,WORLD_BOSS,MUSEUM_TIER_MULT,MUSEUM_BASE,MUSEUM_CAP,MUSEUM_DEF_CAP,MUSEUM_DR_CAP,FORGE_MATERIAL_TIER,ASSET_PATHS,PNG_ICONS,SVG,MONSTER_TINTS,CANDY_KINDS,CANDY_TIERS,CANDY_TIER_AURA,WEATHERS,SEASONS,CANDY_DEFS,getLevel,getXPFor,hpPerDefLvl,getMaxHpFor,getRarityByTier,getItemMaterialTier,museumRarityFactor,museumFamilies,museumWeaponMult,getPngPath,icon,itemIcon,monsterIcon,candyIcon,create};
 if(typeof module!=='undefined') module.exports=API;

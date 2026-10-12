@@ -99,34 +99,34 @@ const XPModel = (() => {
     let speedFactors={'Fixed action time':1};
     if(k==='gathering')speedFactors={'Tool':p.tool.speed,'Blessing':1+(pray.tool_speed||0),'Pet':1+(b.tool_speed||0)+(pet.skill===p.id?(b.skill_speed||0):0),'Equipment + set':1+gear.gather,'Weather':1+(weather.gather_speed||0),'Community Center':cc>=25?1.05:1,'Speed potion':1+(speedPotion?p.potion.value:0),'Speed candy':1+candySpeed};
     if(k==='production')speedFactors={'Blessing':1+(pray.craft_speed||0),'Pet':1+(b.production_speed||0),'Equipment':1+gear.prod,'Weather':1+(weather.process_speed||0),'Community Center':cc>=50?1.05:1,'Speed potion':1+(speedPotion?p.potion.value:0),'Speed candy':1+candySpeed};
-    return {xpFactors,speedFactors,xpAll,xpMult:product(xpFactors),speed:product(speedFactors),successBonus:(pray.thieving_success||0)+(p.perks.thieving_success||0)+(weather.thieving||0)};
+    return {xpFactors,speedFactors,xpAll,xpMult:product(xpFactors),speed:product(speedFactors),weatherSuccess:weather.thieving||0,successBonus:(pray.thieving_success||0)+(p.perks.thieving_success||0)+(weather.thieving||0)};
   }
   function petXp(p,count,mult,offline=false){
-    const b=p.perks,a=p.a,round=x=>offline?Math.round(x):x;
+    const b=p.perks,a=p.a,round=x=>x;
     if(p.k==='production'){const chance=Object.entries(b).find(([key])=>key.endsWith('_extra'))?.[1]||0;return round(count*chance)*a.xp*mult;}
     // Source precedence is deliberate: a skill-pet branch wins over a different set perk.
-    if(p.id==='woodcutting'&&b.wc_double)return round(count*b.wc_double)*a.xp*mult;
+    if(p.id==='woodcutting')return count*((b.wc_double||0)+2*(b.wc_triple||0))*a.xp*mult;
     if(p.id==='fishing'&&b.fish_bonus){const list=actions.filter(a=>a.skill==='Fishing'),i=list.findIndex(x=>x.id===a.id),next=list[Math.min(i+1,list.length-1)];return round(count*b.fish_bonus)*next.xp*mult;}
     if(p.id==='mining'&&b.mining_coal){const list=actions.filter(a=>a.skill==='Mining'),coal=list.find(a=>a.output==='Coal');return round(count*b.mining_coal*a.level/list.at(-1).level)*coal.xp*mult;}
     if(p.id==='woodcutting'&&b.wc_triple)return count*b.wc_triple*2*a.xp*mult;
     return 0;
   }
-  function success(level,unlock,bonus){return Math.min(bonus>0?1:.95,Math.max(.05,.5+(level-unlock)*.045+bonus));}
-  function thieving(startXp,attempts,action,mult,bonus,targetXp=Infinity){
+  function success(level,unlock,bonus,weatherBonus=0){const w=Math.min(bonus,weatherBonus),max=Math.max(...Object.values(R.WEATHERS).map(x=>x.bonus?.thieving||0),0);const cap=bonus-w>0?1:.95+.05*(max>0?Math.min(1,w/max):0);return Math.min(cap,Math.max(.05,.5+(level-unlock)*.045+bonus));}
+  function thieving(startXp,attempts,action,mult,bonus,targetXp=Infinity,weatherBonus=0){
     let xp=startXp,remaining=attempts,count=0,successful=0;
     for(let guard=0;remaining>=1&&xp<targetXp&&guard<260;guard++){
-      const level=R.getLevel(xp),prob=success(level,action.level,bonus),gain=action.xp*mult*prob;
+      const level=R.getLevel(xp),prob=success(level,action.level,bonus,weatherBonus),gain=action.xp*mult*prob;
       const boundary=Math.min(targetXp,level<130?R.getXPFor(level+1):Infinity);
       const chunk=Math.min(remaining,Number.isFinite(boundary)?Math.max(1,Math.ceil((boundary-xp)/gain)):remaining);
       xp+=chunk*gain;count+=chunk;successful+=chunk*prob;remaining-=chunk;
     }
-    return {xp:xp-startXp,count,successful:Math.round(successful)};
+    return {xp:xp-startXp,count,successful};
   }
   function maintained(p,weather,candyXp,candySpeed){
     const st=stats(p,weather,candyXp,candySpeed),tm=timing(p.a.time,st.speed,p.s.timingMode,p.k);
-    const chance=p.k==='thieving'?success(p.from,p.a.level,st.successBonus):1;
+    const chance=p.k==='thieving'?success(p.from,p.a.level,st.successBonus,st.weatherSuccess):1;
     const extraXp=petXp(p,1,p.s.timingMode==='offline'&&p.k==='gathering'?st.xpAll:st.xpMult),perAction=p.a.xp*st.xpMult*chance+extraXp;
-    let count=p.k==='thieving'?thieving(p.startXp,Infinity,p.a,st.xpMult,st.successBonus,p.startXp+p.required).count:Math.ceil(p.required/perAction);
+    let count=p.k==='thieving'?thieving(p.startXp,Infinity,p.a,st.xpMult,st.successBonus,p.startXp+p.required,st.weatherSuccess).count:Math.ceil(p.required/perAction);
     count=Math.ceil(count/tm.batch)*tm.batch;
     return {...st,...tm,xp:p.a.xp*st.xpMult,perAction,extraXp,chance,rate:perAction*3600/tm.seconds,count,hours:count/tm.batch*tm.interval/3600000};
   }
@@ -139,7 +139,7 @@ const XPModel = (() => {
       used=fast*fastTiming.interval;const fastTime=used;usedMinutes=p.potion.value?Math.min(span,p.speedMs)/60000:0;
       const normal=Math.floor(Math.max(0,span-used)/slowTiming.interval);count=fast+normal;used+=normal*slowTiming.interval;
       const xpSpan=Math.min(span,p.xpMs);boosted=p.xpPotion.value?Math.min(count,xpSpan<=fastTime?Math.floor(xpSpan/fastTiming.interval):fast+Math.floor((xpSpan-fastTime)/slowTiming.interval)):0;
-      xp=p.a.xp*st.xpAll*(count+boosted*p.xpPotion.value)+petXp(p,count,st.xpAll,true);
+      xp=p.a.xp*st.xpAll*(count+boosted*p.xpPotion.value)+petXp(p,count,st.xpAll*(count?1+boosted*p.xpPotion.value/count:1),true);
     }else if(p.k==='production'){
       const fast=p.potion.value?Math.min(p.available,Math.floor(Math.min(span,p.speedMs)/fastTiming.interval)*fastTiming.batch):0;
       used=Math.ceil(fast/fastTiming.batch)*fastTiming.interval;
@@ -148,7 +148,7 @@ const XPModel = (() => {
       xp=p.a.xp*st.xpAll*count+petXp(p,count,st.xpAll,true);
     }else{
       count=Math.min(p.available,Math.floor(span/p.a.time));used=count*p.a.time;
-      if(p.k==='thieving'){const result=thieving(p.startXp,count,p.a,st.xpAll,st.successBonus);xp=result.xp;successful=result.successful;}
+      if(p.k==='thieving'){const result=thieving(p.startXp,count,p.a,st.xpAll,st.successBonus,Infinity,st.weatherSuccess);xp=result.xp;successful=result.successful;}
       else xp=p.a.xp*st.xpAll*count;
     }
     if(p.k==='production'&&p.potion.value)usedMinutes=Math.min(used,p.speedMs)/60000;
@@ -160,7 +160,6 @@ const XPModel = (() => {
     const p=prepare(input),weather=weatherAt(p.s,p.start),strength=strengthAt(p.start),candyXp=tiers[p.s.xpCandy].bonus*strength,candySpeed=['gathering','production'].includes(p.k)?tiers[p.s.speedCandy].bonus*strength:0;
     const base=maintained(p,weather,0,0),rate=maintained(p,weather,candyXp,candySpeed),session=finiteSession(p),warnings=[];
     if(candyXp&&[p.s.customXp1,p.s.customXp2,p.s.customXp3].some(v=>Number(v)>0))warnings.push('Remove any custom XP bonus that already represents candy to avoid counting it twice.');
-    if(p.k!=='gathering')warnings.push('4.1.3.8 background-return bug: another active skill can drain paused gathering potions. This clean offline estimate does not reproduce that unrelated-effect loss.');
     if(p.k==='thieving')warnings.push('XP/hour is the starting-level rate. Target time and session XP update success chance as you level.');
     if(p.k==='gathering'&&p.xpPotion.value)warnings.push('Offline bonus-resource pet XP does not receive the gathering XP potion multiplier. The session follows that source rule.');
     return {action:p.a,required:p.required,baseRate:base.rate,rate:rate.rate,xp:rate.xp,expectedXp:rate.perAction,seconds:rate.seconds,neededActions:rate.count,targetHours:rate.hours,
