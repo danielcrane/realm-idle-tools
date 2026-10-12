@@ -26,9 +26,10 @@ const canonicalPets=new Map(petGroups.flatMap(p=>[p.name,...p.aliases].map(n=>[n
 const clone=x=>JSON.parse(JSON.stringify(x));
 const num=(v,d,min,max)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):d;
 function rng(seed){let x=seed>>>0;return ()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
-function defaults(){return {version:1,levels:{attack:30,strength:30,defense:30,ranged:30,magic:30,divinity:130},equip:Object.fromEntries(slots.map(slot=>[slot,null])),rarities:{},prayer:'',zone:'meadow',target:'guard',mode:'active',minutes:60,trials:48,seed:4136,hpPercent:100,autoEat:true,threshold:50,foodWorstFirst:false,foods:[{name:'Cooked Salmon',qty:1000}],ammo:[],infiniteFood:false,infiniteAmmo:false,ammoWorstFirst:false,infinitePotions:false,infiniteCandies:false,potions:[],candy:'',candyMinutes:60,candyStrength:0.5,weather:'none',season:'none',museum:{},museumMode:'manual',collection:{},killLog:{},bosses:[],vip:true,vip2:true,communityTier:4,communityXP:.05,communityDrops:.05,progression:false};}
+function defaults(){return {version:1,levels:{attack:30,strength:30,defense:30,ranged:30,magic:30,divinity:130},equip:Object.fromEntries(slots.map(slot=>[slot,null])),rarities:{},prayer:'',zone:'meadow',target:'guard',mode:'active',minutes:60,trials:48,seed:4136,hpPercent:100,autoEat:true,threshold:50,foodWorstFirst:false,foods:[{name:'Cooked Minnow',qty:1}],ammo:[],infiniteFood:false,infiniteAmmo:false,ammoWorstFirst:false,infinitePotions:false,infiniteCandies:false,potions:[],candy:'',candyMinutes:60,candyStrength:0.5,weather:'none',season:'none',museum:{},museumMode:'manual',collection:{},killLog:{},bosses:[],vip:true,vip2:true,communityTier:4,communityXP:.05,communityDrops:.05,progression:false};}
 function normalize(raw={}){
  const c={...defaults(),...clone(raw)};
+ c.singleKill=raw.singleKill===true;
  c.levels=Object.fromEntries(skillNames.map(s=>[s,Math.floor(num(c.levels?.[s],1,1,130))]));
  c.exactXP=Object.fromEntries(skillNames.map(s=>{const xp=c.exactXP?.[s];return [s,typeof xp==='number'&&Number.isFinite(xp)&&xp>=0&&xp<=Number.MAX_SAFE_INTEGER&&R.getLevel(xp)===c.levels[s]?xp:R.getXPFor(c.levels[s])];}));
  if(!combatBlessings.some(p=>p.id===c.prayer))c.prayer='';
@@ -43,7 +44,7 @@ function normalize(raw={}){
  if(!R.ZONES[c.zone])c.zone='meadow';
  if(!R.MONSTERS[c.zone].some(m=>m.id===c.target))c.target=R.MONSTERS[c.zone][0].id;
  if(!['active','background','offline'].includes(c.mode))c.mode='active';
- c.minutes=num(c.minutes,60,1,1440);c.trials=Math.floor(num(c.trials,48,8,256));c.seed=Math.floor(num(c.seed,4136,0,4294967295));
+ c.minutes=num(c.minutes,60,1,1440);c.trials=Math.floor(num(c.trials,48,8,c.singleKill?5000:256));c.seed=Math.floor(num(c.seed,4136,0,4294967295));
  c.hpPercent=num(c.hpPercent,100,1,100);c.threshold=num(c.threshold,50,1,100);
  c.foods=(Array.isArray(c.foods)?c.foods:[]).filter(x=>R.FOOD_HEALS[x.name]).map(x=>({name:x.name,qty:Math.floor(num(x.qty,0,0,1e9))}));
  c.ammo=(Array.isArray(c.ammo)?c.ammo:[]).filter(x=>R.EQUIPMENT[x.name]?.slot==='ammo'&&!R.EQUIPMENT[x.name]?.infinite&&!R.EQUIPMENT[x.name]?.sigil).map(x=>({name:x.name,tier:Math.floor(num(x.tier,1,1,21)),qty:Math.floor(num(x.qty,0,0,1e9))}));
@@ -129,7 +130,7 @@ function snapshot(raw){
  if((r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo)warnings.push('Equip compatible arrows, a spell, or a rune before simulating.');
  if(c.zone==='haunted')warnings.push('Haunted Hollow is a hypothetical open-portal encounter here; seasonal access and portal expiry are not simulated.');
  if(c.progression&&c.mode!=='active')warnings.push('Away modes apply combat level-ups; maximum HP, walking and bestiary bonuses remain fixed during this simulation.');
- if(c.mode!=='active'&&c.candies.length)warnings.push('Away combat uses each candy’s session-weighted bonus throughout, matching the game’s span handling.');
+ if(c.mode!=='active'&&c.candies.length&&!c.singleKill)warnings.push('Away combat uses each candy’s session-weighted bonus throughout, matching the game’s span handling.');
  if(c.mode==='offline'&&c.hpPercent!==100)warnings.push('Cold offline starts at full HP, as the game’s offline calculation does. The starting HP setting applies to active and background play.');
  if(c.infiniteFood||c.infiniteAmmo||c.infinitePotions||c.infiniteCandies)warnings.push('Unlimited supplies enabled: this is a sustained-farming scenario.');
  const attacks=expectedAttacks(m.hp,damageRolls),estimatedKph=(r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo?0:3600/(attacks*.6+.8+1.5*walk);
@@ -164,19 +165,20 @@ function simulate(raw,seed){
  env.onKill=award;
  env.onDamage=(n,kind)=>{if(kind==='dealt')out.damage+=n;if(kind==='taken')out.taken+=n;};
  r.beginFight(m);
- env.candy=c.mode==='active'?candyAt(c,'dmg',0):(spanCandy.dmg||0);
+ env.candy=c.mode==='active'||c.singleKill?candyAt(c,'dmg',0):(spanCandy.dmg||0);
  cached=refresh();
  let next=c.mode==='active'?650:600;
  const limit=c.mode==='background'?Math.floor(duration/600)*600:duration;
- while(c.mode==='offline'?time<limit:next<=limit){
+ while(c.singleKill?next<=limit:c.mode==='offline'?time<limit:next<=limit){
   time=next;env.now=time+1;
   if(c.mode==='active')activeClock(time);
-  if(c.mode==='active')env.candy=candyAt(c,'dmg',time);
+  if(c.mode==='active'||c.singleKill)env.candy=candyAt(c,'dmg',time);
   replenish();const foodBefore=countFood(),ammoBefore=countAmmo(),ammoName=g.equip.ammo;
   out.attacks++;
   if(c.mode==='active'){
    const step=r.activeStep();out.food+=foodBefore-countFood();out.ammo+=Math.max(0,ammoBefore-countAmmo());
    if(env.stop){out.stop=env.stop;out.stopAt=time;break;}
+   if(c.singleKill&&step.monsterHp<=0){out.kills=1;out.stop='kill';out.stopAt=time;break;}
    if(step.delay){
     // Visible combat credits the kill after its 800 ms death animation.
     out.deathMs+=Math.min(step.delay,Math.max(0,duration-time));
@@ -201,6 +203,7 @@ function simulate(raw,seed){
    let incoming=0;if(monHp>0&&random()<cached.penetration){incoming=Math.max(Math.max(1,Math.floor(m.str*.04)),Math.floor(roll(Math.floor(m.str*.42),Math.floor(m.str*.58))*(1-cached.eff)));if(cached.dr!==0)incoming=Math.max(0,Math.floor(incoming*(1-cached.dr)));if(bestDef>1)incoming=Math.max(0,Math.floor(incoming/bestDef));}g.hp-=incoming;out.taken+=incoming;
    out.food+=foodBefore-countFood();out.ammo+=Math.max(0,ammoBefore-countAmmo());
    if(g.hp<=0){out.stop='death';out.stopAt=c.mode==='background'?time-600:time;break;}
+   if(c.singleKill&&monHp<=0){out.kills=1;out.stop='kill';out.stopAt=time;break;}
    
    next=time+600;
    if(monHp<=0){award();monHp=m.hp;let delay=walk;if(c.mode==='background'){carry+=walk/600;delay=Math.floor(carry)*600;carry-=Math.floor(carry);}out.deathMs+=Math.min(800,Math.max(0,duration-time));out.walkMs+=Math.max(0,Math.min(delay-800,duration-time-800));next+=delay;if(c.mode==='offline'){time+=walk;drain(walk);}else pendingWalk=walk;}
@@ -215,6 +218,12 @@ function aggregate(runs,c){
  const mean=k=>runs.reduce((s,r)=>s+r[k],0)/runs.length,percentile=(k,p)=>{const a=runs.map(x=>x[k]).sort((a,b)=>a-b);return a[Math.min(a.length-1,Math.floor(p*a.length))];};
  const sd=Math.sqrt(runs.reduce((s,r)=>s+(r.kph-mean('kph'))**2,0)/Math.max(1,runs.length-1));
  const loot={};for(const r of runs)for(const [n,q]of Object.entries(r.loot))loot[n]=(loot[n]||0)+q/runs.length;
+ if(c.singleKill){
+  const successful=runs.filter(r=>r.stop==='kill'),meanSuccess=k=>successful.length?successful.reduce((sum,r)=>sum+r[k],0)/successful.length:null;
+  const n=runs.length,p=successful.length/n,z=1.96,denom=1+z*z/n,center=(p+z*z/(2*n))/denom,margin=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/denom;
+  return {singleKill:true,n,successes:successful.length,survivalChance:p,survivalLow:Math.max(0,center-margin),survivalHigh:Math.min(1,center+margin),killTime:meanSuccess('stopAt'),remainingHp:meanSuccess('endingHp'),food:mean('food'),deathChance:runs.filter(r=>r.stop==='death').length/n,ammoChance:runs.filter(r=>r.stop==='ammo').length/n,timeoutChance:runs.filter(r=>r.stop==='complete').length/n,example:runs[0]};
+ }
+
  return {n:runs.length,kph:mean('kph'),kphLow:percentile('kph',.05),kphHigh:percentile('kph',.95),meanError:1.96*sd/Math.sqrt(runs.length),kills:mean('kills'),food:mean('food'),ammo:mean('ammo'),gold:mean('gold'),xp:mean('xp'),defenseXP:mean('defenseXP'),damage:mean('damage'),taken:mean('taken'),attacks:mean('attacks'),walkMs:mean('walkMs'),deathMs:mean('deathMs'),endingHp:mean('endingHp'),deathChance:runs.filter(r=>r.stop==='death').length/runs.length,ammoChance:runs.filter(r=>r.stop==='ammo').length/runs.length,stopAt:mean('stopAt'),loot,example:runs[Math.floor(runs.length/2)]};
 }
 async function run(raw,onProgress=()=>{},cancel=()=>false){const c=normalize(raw),runs=[];for(let i=0;i<c.trials;i++){if(cancel())return null;runs.push(simulate(c,(c.seed+Math.imul(i,2654435761))>>>0));onProgress(i+1,c.trials);await new Promise(resolve=>setTimeout(resolve,0));}return aggregate(runs,c);}
