@@ -33,7 +33,7 @@
  select('boss',M.S.bosses.map(b=>({name:b.id,label:b.name})),M.defaults.boss,x=>x.label);
  for(const k of ['toolRarity','amuletRarity',...M.slots.map(s=>s+'Rarity')])select(k,M.G.rarities,M.defaults[k]);
  for(const k of ['blessing','potion','amulet'])select(k,(k==='potion'?potions:M.options[{blessing:'blessings',amulet:'amulets'}[k]]),'None',x=>x.name+(k==='blessing'&&x.name!=='None'?' · Divinity '+x.level:k==='potion'&&x.name!=='None'?' · +'+fmt(x.value*100)+'%':''));
- for(const k of ['season','weather'])select(k,Object.entries(k==='season'?M.R.SEASONS:M.R.WEATHERS).map(([name,x])=>({name,label:x.name})),M.defaults[k],x=>x.label);
+ for(const k of ['season','weather'])select(k,Object.entries(k==='season'?M.R.SEASONS:M.R.WEATHERS).map(([name,x])=>({name,label:x.name+(x.desc?' · '+x.desc:'')})),M.defaults[k],x=>x.label);
  $('planner').addEventListener('submit',e=>e.preventDefault());$('planner').addEventListener('input',e=>{if(e.target.id==='boss'){const s=state(),b=M.S.bosses.find(b=>b.id===s.boss);s.tool=M.G.tools[b.skill][0].name;catalogs(s);}render();});
  $('pin').addEventListener('click',()=>{if(last){pinned=last;$('clear-pin').hidden=false;render();}});$('clear-pin').addEventListener('click',()=>{pinned=null;$('clear-pin').hidden=true;render();});
  const now=Date.now(),initial={...M.defaults,start:new Date(now).toISOString().slice(0,16),season:M.defaults.season,weather:M.defaults.weather,eventActive:M.R.candyStrengthAt(now,'halloween')===1};initial.boss=M.rotation(Date.parse(initial.start+'Z')).boss.id;initial.tool=M.G.tools[M.S.bosses.find(b=>b.id===initial.boss).skill][0].name;
