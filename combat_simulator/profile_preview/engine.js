@@ -26,10 +26,12 @@ const canonicalPets=new Map(petGroups.flatMap(p=>[p.name,...p.aliases].map(n=>[n
 const clone=x=>JSON.parse(JSON.stringify(x));
 const num=(v,d,min,max)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):d;
 function rng(seed){let x=seed>>>0;return ()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
-function defaults(){return {version:1,levels:{attack:30,strength:30,defense:30,ranged:30,magic:30,divinity:130},equip:Object.fromEntries(slots.map(slot=>[slot,null])),rarities:{},prayer:'',zone:'meadow',target:'guard',mode:'active',minutes:60,trials:48,seed:4136,hpPercent:100,autoEat:true,threshold:50,foodWorstFirst:false,foods:[{name:'Cooked Minnow',qty:1}],ammo:[],infiniteFood:false,infiniteAmmo:false,ammoWorstFirst:false,infinitePotions:false,infiniteCandies:false,potions:[],candy:'',candyMinutes:60,candyStrength:0.5,weather:'none',season:'none',museum:{},museumMode:'manual',collection:{},killLog:{},bosses:[],vip:true,vip2:true,communityTier:4,communityXP:.05,communityDrops:.05,progression:false};}
+function defaults(){return {version:1,levels:{attack:30,strength:30,defense:30,ranged:30,magic:30,divinity:130},equip:Object.fromEntries(slots.map(slot=>[slot,null])),rarities:{},prayer:'',zone:'meadow',target:'guard',mode:'active',minutes:60,trials:48,seed:4136,hpPercent:100,autoEat:true,threshold:50,foodWorstFirst:false,foods:[{name:'Cooked Minnow',qty:1}],ammo:[],infiniteFood:false,advancedAmmo:false,infiniteAmmo:true,ammoWorstFirst:false,infinitePotions:false,infiniteCandies:false,potions:[],candy:'',candyMinutes:60,candyStrength:0.5,weather:'none',season:'none',museum:{},museumMode:'manual',collection:{},killLog:{},bosses:[],vip:true,vip2:true,communityTier:4,communityXP:.05,communityDrops:.05,progression:false};}
 function normalize(raw={}){
  const c={...defaults(),...clone(raw)};
  c.singleKill=raw.singleKill===true;
+ c.advancedAmmo=raw.advancedAmmo===true;
+ c.infiniteAmmo=c.advancedAmmo?raw.infiniteAmmo===true:true;
  c.levels=Object.fromEntries(skillNames.map(s=>[s,Math.floor(num(c.levels?.[s],1,1,130))]));
  c.exactXP=Object.fromEntries(skillNames.map(s=>{const xp=c.exactXP?.[s];return [s,typeof xp==='number'&&Number.isFinite(xp)&&xp>=0&&xp<=Number.MAX_SAFE_INTEGER&&R.getLevel(xp)===c.levels[s]?xp:R.getXPFor(c.levels[s])];}));
  if(!combatBlessings.some(p=>p.id===c.prayer))c.prayer='';
@@ -134,7 +136,7 @@ function snapshot(raw){
  if(c.progression&&c.mode!=='active')warnings.push('Away modes apply combat level-ups; maximum HP, walking and bestiary bonuses remain fixed during this simulation.');
  if(c.mode!=='active'&&c.candies.length&&!c.singleKill)warnings.push('Away combat uses each candy’s session-weighted bonus throughout, matching the game’s span handling.');
  if(c.mode==='offline'&&c.hpPercent!==100)warnings.push('Cold offline starts at full HP, as the game’s offline calculation does. The starting HP setting applies to active and background play.');
- if(c.infiniteFood||c.infiniteAmmo||c.infinitePotions||c.infiniteCandies)warnings.push('Unlimited supplies enabled: this is a sustained-farming scenario.');
+ if(c.infiniteFood||(c.advancedAmmo&&c.infiniteAmmo)||c.infinitePotions||c.infiniteCandies)warnings.push('Unlimited supplies enabled: this is a sustained-farming scenario.');
  const attacks=m._worldBoss?Infinity:expectedAttacks(m.hp,damageRolls),estimatedKph=(r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo?0:3600/(attacks*.6+.8+1.5*walk);
  return {estimatedKph,expectedAttacks:attacks,stats,hp:g.maxHp,pb,defense,range:{min:transform(min),max:transform(cap)},average:avg,dps:avg/.6,walk,walkSeconds:1.5*walk,delay:.8+1.5*walk,walkParts:{lodge:r.getZoneWalkReduction(c.zone),boss:r.getZoneBossWalkReduction(c.zone),pet:r.getPetWalkSpeed()},incomingMax:r._maxIncomingHit(m,stats,pb),enemyHitChance:penetration,bestiary:r.getBestiaryBonus(m.name),style:r.getCombatStyle(),warnings,museum:r.getMuseumBonus(),vampire:r.vampireSetBonus()};
 }

@@ -104,7 +104,7 @@
    rows[0].before(details);for(const row of rows)details.append(row);
    details.addEventListener('toggle',()=>{if(details.isConnected)supplyExpanded[type]=details.open;});
   }
-  $('supplies').insertAdjacentHTML('afterbegin',`<div class="panel"><h3>Profile Inventory</h3><p class="note">Copy known food and ammunition quantities into this simulation. One equipped finite ammo item is reserved from owned totals. Potions use remaining minutes, so choose those separately below.</p><button id="preview-use-inventory" ${profile?'':'disabled'}>Use Profile Inventory</button><p id="preview-supply-note" class="note"></p></div>`);
+  $('supplies').insertAdjacentHTML('afterbegin',`<div class="panel"><h3>Profile Inventory</h3><p class="note">Copy known food and ammunition quantities into this simulation. Ammo quantities apply only when Advanced Ammo Settings are enabled. One equipped finite ammo item is reserved from owned totals. Potions use remaining minutes, so choose those separately below.</p><button id="preview-use-inventory" ${profile?'':'disabled'}>Use Profile Inventory</button><p id="preview-supply-note" class="note"></p></div>`);
  };
  function receive(next,force=false){
   profile=M.validate(next);if(meta.setId===null)meta.setId=profile.combatSets[0]?.id||'';

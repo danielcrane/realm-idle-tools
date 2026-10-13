@@ -156,3 +156,7 @@ button,input,select{min-height:40px}
 /* Shared title row keeps all six combat metrics aligned, including help buttons. */
 .snapshot-item>.metric-label{display:flex;align-items:flex-start;min-height:2.8em;margin:0;padding:0;font-family:inherit;font-weight:400;line-height:1.4;letter-spacing:.5px;text-transform:uppercase}
 .snapshot-item>.block-help-toggle>span{margin-top:1px}
+
+.advanced-ammo-fields{border:0;padding:0;margin:0;min-width:0}
+.advanced-ammo-fields:disabled{opacity:.55}
+#advanced-ammo>summary{font-weight:600}
