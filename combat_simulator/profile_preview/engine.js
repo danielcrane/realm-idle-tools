@@ -40,7 +40,7 @@ function normalize(raw={}){
  if((w.twoHand && !(w.ranged&&off.quiver)) || (off.quiver&&!w.ranged))c.equip.shield=null;
  const a=R.EQUIPMENT[c.equip.ammo]||{};
  if(c.equip.ammo && (w.magic?!a.magicMult:w.ranged?!a.rngBonus:!a.sigil))c.equip.ammo=null;
- c.rarities=Object.fromEntries(slots.map(s=>[s,R.EQUIPMENT[c.equip[s]]?.infinite&&c.equip[s]!=='Wraith Rune'?1:Math.floor(num(c.rarities?.[s],1,1,21))]));
+ c.rarities=Object.fromEntries(slots.map(s=>[s,(R.EQUIPMENT[c.equip[s]]?.magicMult||R.EQUIPMENT[c.equip[s]]?.infinite)&&c.equip[s]!=='Wraith Rune'?1:Math.floor(num(c.rarities?.[s],1,1,21))]));
  if(!R.ZONES[c.zone])c.zone='meadow';
  if(!R.MONSTERS[c.zone].some(m=>m.id===c.target))c.target=R.MONSTERS[c.zone][0].id;
  if(!['active','background','offline'].includes(c.mode))c.mode='active';
@@ -48,7 +48,7 @@ function normalize(raw={}){
  c.minutes=num(c.minutes,60,1,1440);c.trials=Math.floor(num(c.trials,48,8,c.singleKill?5000:256));c.seed=Math.floor(num(c.seed,4136,0,4294967295));
  c.hpPercent=num(c.hpPercent,100,1,100);c.threshold=num(c.threshold,50,1,100);
  c.foods=(Array.isArray(c.foods)?c.foods:[]).filter(x=>R.FOOD_HEALS[x.name]).map(x=>({name:x.name,qty:Math.floor(num(x.qty,0,0,1e9))}));
- c.ammo=(Array.isArray(c.ammo)?c.ammo:[]).filter(x=>R.EQUIPMENT[x.name]?.slot==='ammo'&&!R.EQUIPMENT[x.name]?.infinite&&!R.EQUIPMENT[x.name]?.sigil).map(x=>({name:x.name,tier:Math.floor(num(x.tier,1,1,21)),qty:Math.floor(num(x.qty,0,0,1e9))}));
+ c.ammo=(Array.isArray(c.ammo)?c.ammo:[]).filter(x=>R.EQUIPMENT[x.name]?.slot==='ammo'&&!R.EQUIPMENT[x.name]?.infinite&&!R.EQUIPMENT[x.name]?.sigil).map(x=>({name:x.name,tier:R.EQUIPMENT[x.name]?.magicMult?1:Math.floor(num(x.tier,1,1,21)),qty:Math.floor(num(x.qty,0,0,1e9))}));
  const seen=new Set();c.potions=(Array.isArray(c.potions)?c.potions:[]).filter(x=>{const p=R.POTIONS[x.name];if(!p||/gathering|production/.test(p.stat)||seen.has(p.stat))return false;seen.add(p.stat);return true;}).map(x=>({name:x.name,minutes:num(x.minutes ?? (x.charges===undefined?R.POTIONS[x.name].duration/60000:Math.min(1000,Math.max(0,Number(x.charges))/R.POTIONS[x.name].attacks)*R.POTIONS[x.name].duration/60000),R.POTIONS[x.name].duration/60000,0,1e8)}));
  // Migrate older single-candy profiles and retain at most one tier per effect.
  const candyRows=Array.isArray(c.candies)?c.candies:[{name:c.candy,minutes:c.candyMinutes,strength:c.candyStrength}];
