@@ -2,7 +2,7 @@
  const $=id=>document.getElementById(id),monsters=EventData.monsters;
  const number=n=>n.toLocaleString(undefined,{maximumFractionDigits:3});
  const tierOf=m=>m.drops[0].item.split(' ')[0];
- $('monster-rows').innerHTML=monsters.map(m=>`<tr data-monster="${m.id}"><th scope="row"><div class="monster-name"><span class="monster-portrait"><img src="${m.image}" style="filter:${EventData.tints[m.tint]}" width="48" height="48" alt=""></span><span>${m.name}<small>Level ${m.level}</small></span></div></th><td><span class="tier-badge">${tierOf(m)}</span></td><td><input aria-label="${m.name} kills per hour" type="number" min="0" max="1000000000" step="any" value="1000" data-kph="${m.id}"></td><td class="time"></td></tr>`).join('');
+ $('monster-rows').innerHTML=monsters.map(m=>`<tr data-monster="${m.id}"><th scope="row"><div class="monster-name"><span class="monster-portrait"><img src="${m.image}" style="filter:${EventData.tints[m.tint]}" width="48" height="48" alt=""></span><span>${m.name}<small>Level ${m.level}</small></span></div></th><td><span class="tier-badge">${tierOf(m)}</span></td><td><input aria-label="${m.name} kills per hour" type="number" min="0" max="1000000000" step="any" value="1000" data-kph="${m.id}"></td><td class="time"></td><td class="candy-totals"></td></tr>`).join('');
  function render(){
   $('drop-bonus-value').textContent=`+${number(Number($('bonus').value))}%`;
   const monthsValid=$('months').value!==''&&$('months').checkValidity();
@@ -14,7 +14,19 @@
   for(const m of monsters){
    const row=document.querySelector(`[data-monster="${m.id}"]`),input=row.querySelector('input');
    const valid=input.value!==''&&input.checkValidity();input.setAttribute('aria-invalid',String(!valid));
-   row.querySelector('.time').textContent=invalid?'—':!valid?'Enter valid KPH':EventModel.duration(Math.max(...m.drops.map(drop=>EventModel.plan(drop,EventData.tiers[tierOf(m)].mins,Number($('months').value),365.2425/12,Number(input.value),Number($('bonus').value),Number($('double').value)).hours)));
+   const totals=row.querySelector('.candy-totals');
+   if(invalid||!valid){row.querySelector('.time').textContent=invalid?'—':'Enter valid KPH';totals.textContent='—';continue;}
+   const plans=m.drops.map(drop=>({drop,...EventModel.plan(drop,EventData.tiers[tierOf(m)].mins,months,365.2425/12,Number(input.value),Number($('bonus').value),Number($('double').value))}));
+   const hours=Math.max(...plans.map(p=>p.hours));
+   row.querySelector('.time').textContent=EventModel.duration(hours);
+   if(!Number.isFinite(hours)){totals.textContent='—';continue;}
+   const kinds=[['Gathering','Gather','gathering'],['Processing','Prod','processing'],['Combat','Combat','combat'],['XP','XP','xp']];
+   totals.innerHTML='<div class="candy-counts">'+kinds.map(([kind,label,icon])=>{
+    const p=plans.find(p=>p.drop.item.includes(' '+kind+' Candy'));
+    const amount=p.rate*hours,formatted=Math.round(amount).toLocaleString();
+    const name=p.drop.item.replace('Processing','Production');
+    return `<span class="candy-count" data-tier="${tierOf(m)}" title="${name}: ${formatted} on average" aria-label="${name}: ${formatted} on average"><img src="combat_simulator/Assets/Items/Misc/candy_${icon}.png" width="20" height="20" alt=""><span class="candy-kind">${label}</span><b>${formatted}</b></span>`;
+   }).join('')+'</div>';
   }
   document.querySelectorAll('[data-months]').forEach(b=>b.setAttribute('aria-pressed',Number(b.dataset.months)===Number($('months').value)));
  }
