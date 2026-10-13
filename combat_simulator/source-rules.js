@@ -3313,6 +3313,10 @@ getMuseumBonus=()=>env.museum || collectionMuseumBonus();
 let currentFight=null, currentTab='combat', isProcessingDeath=false, fightInterval=1, pending=null;
 const monsterElement={classList:{contains:()=>false,add(){}},style:{}};
 const window={};
+// Headless world-boss state is per attempt and never touches game persistence.
+const wbState=()=>env.worldBossState||(env.worldBossState={dmg:0,week:0});
+const _wbUpdateArenaDom=()=>{};
+const endWorldBossAttempt=reason=>{env.stop=reason==='died'?'death':'complete';currentFight=null;};
 const document={querySelector:s=>s==='.monster-display-icon'?monsterElement:null,querySelectorAll:()=>[],activeElement:null};
 const Math=Object.create(globalThis.Math); Math.random=()=>env.random ? env.random() : globalThis.Math.random();
 const rand=(a,b)=>globalThis.Math.floor(Math.random()*(b-a+1))+a;
@@ -3988,7 +3992,7 @@ function fightTick(){
   }
   saveGame();
 }
-function beginFight(m){currentFight={...m,currentHp:m.hp};isProcessingDeath=false;pending=null;}
+function beginFight(m){currentFight={...m,currentHp:m.hp};isProcessingDeath=false;pending=null;if(m._worldBoss)window._wbTicksLeft=m.attemptTicks;}
 function activeStep(){pending=null;fightTick();return {delay:pending?.delay||0,dead:env.stop==='death',monsterHp:currentFight?.currentHp||0};}
 function resumeFight(){const p=pending;pending=null;if(p) p.fn();return {delay:pending?.delay||0,pending:!!pending};}
 return {potionKind,potionOn,getPotion,potionValue,potionMsLeft,_potionFromCharges,_potionUse,getPetDef,equippedSkillPetBonus,getPrayerBonuses,isUsingMagic,isUsingRanged,getCombatStyle,getPlayerStats,getMaxHit,getMinHitFrac,getMinHit,getHitRangeVs,_maxIncomingHit,getPetFlatDmg,getPetWalkSpeed,getPetGoldBoost,getPetBoneDouble,getLuckMultiplier,vampireSetCount,vampireSetBonus,museumUnlocked,lodgeUnlocked,getBestiaryBonus,getBestiaryDropMult,getBestiaryDmgMult,getBestiaryDefMult,getZoneWalkReduction,getZoneBossWalkReduction,getZoneWalkReductionTotal,getZoneWalkMult,getMuseumRarity,getMuseumBonus,_isKeptFood,_autoEatFoods,getBestFood,_isKeptAmmo,_isKeptAmmoTier,_ammoTiers,_ammoPickTier,_dropKeptAmmo,_offlineConsumeAmmo,_ammoSwitch,collectionMuseumBonus,beginFight,activeStep,resumeFight,env,game};

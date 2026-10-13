@@ -44,6 +44,7 @@ function normalize(raw={}){
  if(!R.ZONES[c.zone])c.zone='meadow';
  if(!R.MONSTERS[c.zone].some(m=>m.id===c.target))c.target=R.MONSTERS[c.zone][0].id;
  if(!['active','background','offline'].includes(c.mode))c.mode='active';
+ if(R.MONSTERS[c.zone].find(m=>m.id===c.target)._worldBoss){c.mode='active';c.minutes=2;c.singleKill=false;c.progression=false;}
  c.minutes=num(c.minutes,60,1,1440);c.trials=Math.floor(num(c.trials,48,8,c.singleKill?5000:256));c.seed=Math.floor(num(c.seed,4136,0,4294967295));
  c.hpPercent=num(c.hpPercent,100,1,100);c.threshold=num(c.threshold,50,1,100);
  c.foods=(Array.isArray(c.foods)?c.foods:[]).filter(x=>R.FOOD_HEALS[x.name]).map(x=>({name:x.name,qty:Math.floor(num(x.qty,0,0,1e9))}));
@@ -61,7 +62,7 @@ function normalize(raw={}){
  c.museumStyle=Object.hasOwn(R.MUSEUM_BASE,c.museumStyle)?c.museumStyle:style;
  c.museum=clone(c.museumByStyle[style]);
  c.collection=Object.fromEntries(Object.entries(c.collection||{}).filter(([n])=>R.EQUIPMENT[n]).map(([n,t])=>[n,Math.floor(num(t,1,0,21))]));
- const names=new Set(Object.values(R.MONSTERS).flat().map(m=>m.name));
+ const names=new Set(Object.values(R.MONSTERS).flat().filter(m=>!m._worldBoss).map(m=>m.name));
  c.killLog=Object.fromEntries(Object.entries(c.killLog||{}).filter(([n])=>names.has(n)).map(([n,k])=>[n,Math.floor(num(k,0,0,1e12))]));
  c.bosses=(Array.isArray(c.bosses)?c.bosses:[]).filter(id=>Object.values(R.MONSTERS).flat().some(m=>m.boss&&m.id===id));
  // Older setups stored the effective percentages instead of a community tier.
@@ -80,7 +81,7 @@ function normalize(raw={}){
  return c;
 }
 function makeContext(raw,seed){
- const c=normalize(raw),m=R.MONSTERS[c.zone].find(m=>m.id===c.target),maxHp=R.getMaxHpFor(c.levels.defense);
+ const c=normalize(raw),m={...R.MONSTERS[c.zone].find(m=>m.id===c.target)},maxHp=R.getMaxHpFor(c.levels.defense);
  const g={equip:clone(c.equip),equippedRarity:clone(c.rarities),skills:clone(c.exactXP),maxHp,hp:Math.max(1,Math.floor(maxHp*c.hpPercent/100)),activePrayer:c.prayer,activeEffects:c.potions.map(x=>({...R.POTIONS[x.name],name:x.name,msLeft:c.infinitePotions?1e15:x.minutes*60000})).filter(e=>e.msLeft>0),bossesKilled:[...c.bosses],killLog:clone(c.killLog),bestRarities:clone(c.collection),inv:{},itemRarities:{},unlockedRunes:[],autoFight:true,autoEat:c.autoEat,autoEatThreshold:c.threshold,foodWorstFirst:c.foodWorstFirst,ammoWorstFirst:c.ammoWorstFirst,combatEffects:false,zone:c.zone,sessionLoot:{startTime:0,foodEaten:0},keptFoods:[],keptAmmo:[]};
  // Divinity is reference-only in the setup; selected blessings always apply.
  g.skills.divinity=R.getXPFor(130);
@@ -93,6 +94,7 @@ function makeContext(raw,seed){
  const env={now:1,weather,vip:c.vip,vip2:c.vip2,candy:0,random:rng(seed??c.seed)};
  env.museum=clone(c.museum);
  const r=R.create(g,env);
+ m.prepare?.(g,r,m);
  return {c,m,g,env,r};
 }
 function candyAt(c,kind,time){const row=c.candies.find(x=>R.CANDY_DEFS[x.name].kind===kind);return row&&(c.infiniteCandies||time<row.minutes*60000)?R.CANDY_DEFS[row.name].value*row.strength:0;}
@@ -133,7 +135,7 @@ function snapshot(raw){
  if(c.mode!=='active'&&c.candies.length&&!c.singleKill)warnings.push('Away combat uses each candy’s session-weighted bonus throughout, matching the game’s span handling.');
  if(c.mode==='offline'&&c.hpPercent!==100)warnings.push('Cold offline starts at full HP, as the game’s offline calculation does. The starting HP setting applies to active and background play.');
  if(c.infiniteFood||c.infiniteAmmo||c.infinitePotions||c.infiniteCandies)warnings.push('Unlimited supplies enabled: this is a sustained-farming scenario.');
- const attacks=expectedAttacks(m.hp,damageRolls),estimatedKph=(r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo?0:3600/(attacks*.6+.8+1.5*walk);
+ const attacks=m._worldBoss?Infinity:expectedAttacks(m.hp,damageRolls),estimatedKph=(r.isUsingRanged()||r.isUsingMagic())&&!g.equip.ammo?0:3600/(attacks*.6+.8+1.5*walk);
  return {estimatedKph,expectedAttacks:attacks,stats,hp:g.maxHp,pb,defense,range:{min:transform(min),max:transform(cap)},average:avg,dps:avg/.6,walk,walkSeconds:1.5*walk,delay:.8+1.5*walk,walkParts:{lodge:r.getZoneWalkReduction(c.zone),boss:r.getZoneBossWalkReduction(c.zone),pet:r.getPetWalkSpeed()},incomingMax:r._maxIncomingHit(m,stats,pb),enemyHitChance:penetration,bestiary:r.getBestiaryBonus(m.name),style:r.getCombatStyle(),warnings,museum:r.getMuseumBonus(),vampire:r.vampireSetBonus()};
 }
 function simulate(raw,seed){
@@ -167,7 +169,7 @@ function simulate(raw,seed){
  r.beginFight(m);
  env.candy=c.mode==='active'||c.singleKill?candyAt(c,'dmg',0):(spanCandy.dmg||0);
  cached=refresh();
- let next=c.mode==='active'?650:600;
+ let next=c.mode==='active'?(m.firstAttackMs||650):600;
  const limit=c.mode==='background'?Math.floor(duration/600)*600:duration;
  while(c.singleKill?next<=limit:c.mode==='offline'?time<limit:next<=limit){
   time=next;env.now=time+1;
@@ -215,6 +217,7 @@ function simulate(raw,seed){
  return out;
 }
 function aggregate(runs,c){
+ if(R.MONSTERS[c.zone].find(m=>m.id===c.target)._worldBoss&&root.CombatEncounterPrototype)return root.CombatEncounterPrototype.aggregate(runs,c);
  const mean=k=>runs.reduce((s,r)=>s+r[k],0)/runs.length,percentile=(k,p)=>{const a=runs.map(x=>x[k]).sort((a,b)=>a-b);return a[Math.min(a.length-1,Math.floor(p*a.length))];};
  const sd=Math.sqrt(runs.reduce((s,r)=>s+(r.kph-mean('kph'))**2,0)/Math.max(1,runs.length-1));
  const loot={};for(const r of runs)for(const [n,q]of Object.entries(r.loot))loot[n]=(loot[n]||0)+q/runs.length;
