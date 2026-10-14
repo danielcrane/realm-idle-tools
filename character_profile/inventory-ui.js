@@ -37,14 +37,18 @@
     });
     $('inventory-rows').addEventListener('click',e=>{const n=e.target.closest('[data-inventory-unknown]')?.dataset.inventoryUnknown;if(n)update(p=>{p.inventory.items[n]={quantity:null,rarities:null};});});
     $('import-game').addEventListener('click',()=>{if(canEdit()){$('game-save-file').value='';$('game-save-file').click();}});
+    function previewGame(text,cloudTime){
+        if(!canEdit())return;
+        pending=I.read(text);
+        const p=pending.profile;
+        $('game-import-summary').textContent=`${cloudTime?'Cloud sync '+date(cloudTime)+' · ':''}Game saved ${date(pending.savedAt)} · ${p.pets.length} pet groups · ${Object.keys(p.museum.items).length} museum items · ${Object.keys(p.inventory.items).length} owned item types`;
+        $('game-import-sections').innerHTML=Object.entries(I.sections).map(([key,label])=>`<label class="check"><input type="checkbox" value="${key}" ${pending.available.includes(key)?key==='currentGear'?'':'checked':'disabled'}>${label}${!pending.available.includes(key)?' — Unavailable':''}</label>`).join('');
+        $('game-import-warnings').innerHTML=pending.warnings.map(w=>`<p class="warning">${esc(w)}</p>`).join('');$('game-import-error').textContent='';$('game-import-dialog').showModal();
+    }
     $('game-save-file').addEventListener('change',async e=>{
       const file=e.target.files[0];if(!file)return;
       try{
-        if(file.size>2e6)throw Error('Game saves must be smaller than 2 MB.');pending=I.read(await file.text());
-        const p=pending.profile;
-        $('game-import-summary').textContent=`Game saved ${date(pending.savedAt)} · ${p.pets.length} pet groups · ${Object.keys(p.museum.items).length} museum items · ${Object.keys(p.inventory.items).length} owned item types`;
-        $('game-import-sections').innerHTML=Object.entries(I.sections).map(([key,label])=>`<label class="check"><input type="checkbox" value="${key}" ${pending.available.includes(key)?key==='currentGear'?'':'checked':'disabled'}>${label}${!pending.available.includes(key)?' — Unavailable':''}</label>`).join('');
-        $('game-import-warnings').innerHTML=pending.warnings.map(w=>`<p class="warning">${esc(w)}</p>`).join('');$('game-import-error').textContent='';$('game-import-dialog').showModal();
+        if(file.size>2e6)throw Error('Game saves must be smaller than 2 MB.');previewGame(await file.text());
       }catch(error){pending=null;report(error.message+' Your profile has not changed.',true);}
     });
     $('game-import-cancel').addEventListener('click',()=>$('game-import-dialog').close());
@@ -61,7 +65,7 @@
         const next=I.apply(getProfile(),pending,selected);persistWithBackup(next);$('game-import-dialog').close();report('Game save imported. '+(selected.includes('currentGear')?'Current gear added as a new set. ':'')+'Existing combat gear sets preserved.');
       }catch(e){$('game-import-error').textContent=e.message+' Import has not been applied.';}
     });
-    return {render};
+    return {render,previewGame};
   }
   root.ProfileInventoryUI={init};
 })(globalThis);

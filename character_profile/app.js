@@ -370,5 +370,6 @@
   }
   catch{storageBlocked=true;$('save-status').textContent='Saved profile unavailable · Autosave paused';message('The saved profile could not be loaded. It has been left untouched. Import a valid backup to replace it, or export your edits to keep them.',true);}
   inventoryUI=ProfileInventoryUI.init({getProfile:()=>profile,replace:next=>{profile=M.validate(next);save();renderAll();},canEdit:()=>{if(storageBlocked){message('Reload to resolve the browser storage issue before editing or importing.',true);return false;}return validDraft();},report:message});
+  if(window.GoogleSaveImport)GoogleSaveImport.init({canEdit:()=>!storageBlocked&&validDraft(),preview:inventoryUI.previewGame,report:message});
   renderAll();
 })();
