@@ -17,7 +17,7 @@
   <script src="character_profile/recovery.js" defer></script>
   <script src="combat_simulator/setup-codec.js" defer></script>
   <script src="character_profile/setup-codec.js" defer></script>
-  <script src="character_profile/google/firebase-app-compat.js" defer></script><script src="character_profile/google/firebase-auth-compat.js" defer></script><script src="character_profile/google-import.js" defer></script><script src="character_profile/app.js" defer></script>
+  <script src="character_profile/google/firebase-app-compat.js" defer></script><script src="character_profile/google/firebase-auth-compat.js" defer></script><script src="character_profile/google-helper-bridge.js" defer></script><script src="character_profile/google-import.js" defer></script><script src="character_profile/app.js" defer></script>
 <script defer src="maintenance/navigation.js"></script>
 <script defer src="maintenance/stat-colors.js"></script>
 </head>
@@ -39,7 +39,7 @@
     </nav>
     <div class="sidebar-foot"><span class="local-dot"></span> Stored in This Browser<p>Keep a backup to move your profile to another browser or device.</p></div>
   </aside>
-  <main><p id="google-import-status" class="note" role="status" aria-live="polite">Google Import Test · Reads your cloud save for review. Importing updates only the character profile in this browser. No game data is written.</p>
+  <main><p id="google-import-status" class="note" role="status" aria-live="polite">Google Import Test · Uses the Windows helper to read your cloud save for review. Importing updates only the character profile in this browser. No game data is written.</p>
     <header class="topbar"><div class="realm-nav-brand"><span class="eyebrow">Your Adventurer’s Record</span><span class="realm-nav-version">Game Version <b>4.1.3.9</b></span></div><div class="actions"><button type="button" id="share-btn">Share / Load Setup</button><button type="button" id="import-google" class="primary">Import from Google</button><button type="button" id="import-game">Import Game Save</button><input type="file" id="game-save-file" accept=".json,application/json" hidden><button type="button" id="import">Import Backup</button><button type="button" id="export" class="primary">Export Backup <span aria-hidden="true">↗</span></button><input type="file" id="import-file" accept=".json,application/json" hidden></div></header>
     <div class="hero"><div><h1>Character Profile</h1><p>Keep your skills, collection, and favourite setups in one place.</p></div></div>
     <div class="profile-bar"><label for="profile-name">Character Name<input id="profile-name" maxlength="60" required value="My Adventurer" autocomplete="off"></label><div id="save-status" role="status">Ready to save your profile.</div></div>
