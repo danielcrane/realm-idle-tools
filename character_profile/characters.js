@@ -7,7 +7,7 @@
  window.CharacterPicker={navigate,setSource:value=>{source=value;document.dispatchEvent(new Event('character-source-changed'));}};
  document.addEventListener('DOMContentLoaded',()=>{
   if(window.ProfileStorageLink?.active)return;
-  const editor=/\/character-profile(?:-2)?\.html$/.test(location.pathname);
+  const editor=location.pathname.endsWith('/character-profile.html');
   const panel=document.createElement('section');panel.className='character-picker';panel.setAttribute('aria-label','Character Selection');
   panel.innerHTML='<label>Character<select id="character-select" aria-label="Character"><option>Loading Characters…</option></select></label><span class="character-picker-actions"></span><span id="character-picker-status" role="status"></span>';
   const anchor=document.querySelector('.profile-bar,.profile-panel,.boss-profile,#profile-connection');

@@ -32,11 +32,7 @@
     };
     for(const k of Object.keys(M.skills)){const xp=number(game.skills[k],M.skills[k]+' XP',false);profile.skills[k]={level:R.getLevel(xp),xp};}
     for(const [n,count] of Object.entries(game.inv))add(n,count);
-    for(const [n,counts] of Object.entries(object(game.itemRarities||{},'Item rarities'))){
-      // Firebase can serialize integer-keyed tier maps as arrays with null gaps.
-      const rows=Array.isArray(counts)?Object.entries(counts).filter(([t,c])=>c!==null&&!(t==='0'&&c===0)):Object.entries(object(counts,'Rarity counts'));
-      for(const [t,count] of rows)add(n,count,tier(Number(t)));
-    }
+    for(const [n,counts] of Object.entries(object(game.itemRarities||{},'Item rarities'))){for(const [t,count] of Object.entries(object(counts,'Rarity counts')))add(n,count,tier(Number(t)));}
     // Equipped items have been removed from inventory by the game. Include them once in owned totals.
     for(const [slot,n] of Object.entries(game.equip)){if(n)add(n,1,slot==='pet'?null:tier(game.equippedRarity?.[slot]??1));}
     for(const [skill,n] of Object.entries(game.tools||{}))if(n)add(n,1,tier(game.toolRarities?.[skill]??1));
