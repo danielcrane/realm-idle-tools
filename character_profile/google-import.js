@@ -13,14 +13,6 @@
       const controller=new AbortController();
       let timer;
       try{
-        if(location.hostname!=='localhost'&&location.hostname!=='127.0.0.1'){
-          status.textContent='Opening the local import helper. Allow the launch prompt, then continue with Google in its window.';
-          if(!root.GoogleHelperBridge)throw Error('The local import helper connection could not load. Reload this page.');
-          const result=await root.GoogleHelperBridge.request();
-          preview(result.text,result.timestamp);
-          status.textContent='Cloud save ready for review. Select sections and confirm the import. Game data has not been changed.';
-          return;
-        }
         if(!root.firebase)throw Error('Google sign-in could not load. Check your internet connection and reload this page.');
         app=firebase.initializeApp(config,'realm-profile-google-import');auth=app.auth();
         await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
