@@ -11,7 +11,7 @@ function describe(data,name,tier){
   for(const [k,l,scale]of [['magicMult','Magic Multiplier','magicScale'],['rangedMult','Ranged Multiplier','rangedScale'],['meleeMult','Melee Multiplier','meleeScale']])if(eq[k])add(k,l,eq[k]+(m-1)*(eq[scale]||0),'mult');
   for(const [k,l]of [['minHit','Minimum Hit'],['lifesteal','Lifesteal'],['boss_dmg','Boss Damage']])if(eq[k])add(k,l,eq[k],'percent');
   if(eq.drPenalty)add('drPenalty','Damage Reduction (Melee Only)',-eq.drPenalty,'percent');
-  for(const [k,l,scale]of [['gathSpeed','Gathering Speed','gathScale'],['skillSpeed',label(eq.skillOf||'skill')+' Speed','skillScale'],['treasureFind',label(eq.skillOf||'gathering')+' Treasure Find','treasureScale'],['prodSpeed','Production Speed','prodScale'],['skillXp','All Skilling XP','skillXpScale']])if(eq[k])add(k,l,eq[k]+(m-1)*(eq[scale]||0),'percent');
+  for(const [k,l,scale]of [['gathSpeed','Gathering Speed','gathScale'],['skillSpeed',label(eq.skillOf||'skill')+' Speed','skillScale'],['treasureFind',({woodcutting:'Bird Nest Chance',mining:'Gem Bag Chance',fishing:'Underwater Chest Chance'}[eq.skillOf]||'Treasure Find'),'treasureScale'],['prodSpeed','Production Speed','prodScale'],['skillXp','All Skilling XP','skillXpScale']])if(eq[k])add(k,l,eq[k]+(m-1)*(eq[scale]||0),'percent');
  }
  if(tool)add('toolSpeed',label(tool.skill)+' Tool Speed',tool.speed*(1+(m-1)*.25),'mult');
  const slots={weapon:'Weapon',shield:'Off Hand',helm:'Head',body:'Body',legs:'Legs',gloves:'Hands',boots:'Feet',ring1:'Ring',cape:'Cape',ammo:'Ammo / Sigil',amulet:'Neck'};

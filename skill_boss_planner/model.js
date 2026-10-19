@@ -35,7 +35,7 @@ const SkillBossModel=(()=>{
   return {s,boss,level,tool,pet,factors,pieces,set,start,candyMinutes,potionMinutes,used,attempts,ticks,remaining,banked,awaySeconds,prior,best};
  }
  function stats(p,t){const weather=(R.SEASONS[p.s.season].bonus.gather_speed||0)+(R.WEATHERS[p.s.weather].bonus.gather_speed||0);const candy=p.s.candy!=='None'&&t<p.start+p.candyMinutes*60000?G.candies[p.s.candy].gather*R.candyStrengthAt(t,'halloween'):0;const factors={...p.factors,Potion:t<p.start+p.potionMinutes*60000?p.factors.Potion:1,Weather:1+weather,Candy:1+candy};const speed=Object.values(factors).reduce((a,b)=>a*b,1);return {factors,speed,tick:Math.max(1,Math.floor(speed*C.dmgPerSpeed))};}
- function reward(boss,damage){const c=S.chest(boss,damage),probs=[0,0,0];probs[c.band]=c.chance;let miss=1-c.chance;for(let band=c.band-1;band>=0;band--){probs[band]=miss*S.config.cacheMaxChance;miss*=1-S.config.cacheMaxChance;}return {...c,probs,none:1-probs.reduce((a,b)=>a+b,0)};}
+ function reward(boss,damage){const c=S.chest(boss,damage),probs=[0,0,0];probs[c.band]=c.chance;let miss=1-c.chance;for(let band=c.band-1;band>=0;band--){probs[band]=miss*S.config.cacheMaxChance;miss*=1-S.config.cacheMaxChance;}return {...c,probs,none:1-probs.reduce((a,b)=>a+b,0),petChance:probs.reduce((sum,p,i)=>sum+p*C.chestBands[i].petChance,0)};}
  function rotation(t){const week=Math.floor(t/(7*24*60*60*1000));return {week,start:week*(7*24*60*60*1000),end:(week+1)*(7*24*60*60*1000),boss:S.bossFor(week),next:S.bossFor(week+1)};}
  function calculate(input){
   const p=prepare(input),st=stats(p,p.start),rot=rotation(p.start),runs=[];let t=p.start,added=0,spent=0;

@@ -11,15 +11,19 @@
   // The source sets these once at the start of an attempt, before buffs expire.
   prepare(g,r,m){m.atk=Math.max(60,Math.ceil(r.getPlayerStats().def*1.2)+120);m.str=Math.max(90,Math.ceil(g.maxHp*2));}
  }];
- const api={chestChance(damage){
-  const w=rules.WORLD_BOSS,d=Math.max(0,damage||0);
-  if(d>=w.cacheDmgTarget)return w.cacheMaxChance;
-  if(d<=w.cacheKneeDmg)return w.cacheKneeChance*d/w.cacheKneeDmg;
-  return w.cacheKneeChance+(w.cacheMaxChance-w.cacheKneeChance)*(d-w.cacheKneeDmg)/(w.cacheDmgTarget-w.cacheKneeDmg);
+ const api={chestReward(damage){
+  const selected=rules.wbChestFor(damage),primary=rules.wbCacheChance(damage),probs=[0,0,0];
+  probs[selected.size]=primary;let none=1-primary;
+  for(let i=selected.size-1;i>=0;i--){probs[i]=none*rules.WORLD_BOSS.cacheMaxChance;none*=1-rules.WORLD_BOSS.cacheMaxChance;}
+  return {...selected,primary,probs,none,any:1-none};
+ },chestChance(damage){
+  return api.chestReward(damage).any;
  },aggregate(runs){
   const mean=k=>runs.reduce((sum,r)=>sum+r[k],0)/runs.length;
   const sorted=runs.map(r=>r.damage).sort((a,b)=>a-b),n=runs.length;
-  return {ashlyn:true,n,chestChance:runs.reduce((sum,r)=>sum+api.chestChance(r.damage),0)/n,damage:mean('damage'),damageLow:sorted[Math.floor((n-1)*.05)],damageHigh:sorted[Math.floor((n-1)*.95)],
+  const chestChances=[0,0,0];let noneChance=0;
+  for(const r of runs){const reward=api.chestReward(r.damage);reward.probs.forEach((p,i)=>chestChances[i]+=p/n);noneChance+=reward.none/n;}
+  return {ashlyn:true,n,chestChance:1-noneChance,chestChances,noneChance,fullChestChance:chestChances[2],damage:mean('damage'),damageLow:sorted[Math.floor((n-1)*.05)],damageHigh:sorted[Math.floor((n-1)*.95)],
    completionChance:runs.filter(r=>r.stop==='complete').length/n,deathChance:runs.filter(r=>r.stop==='death').length/n,
    ammoChance:runs.filter(r=>r.stop==='ammo').length/n,food:mean('food'),ammo:mean('ammo'),endingHp:mean('endingHp'),stopAt:mean('stopAt'),example:runs[0]};
  }};
@@ -123,16 +127,16 @@
  };
  renderWorld=function(){oldWorld();if(!isAshlyn(config))return;
   const lodge=$('world').querySelector('#apply-lodge')?.closest('.panel');
-  if(lodge)lodge.innerHTML='<h3>World Boss Encounter</h3><p class="note">Ashlyn has no Hunter’s Lodge kill milestones. This prototype simulates one fresh attempt and does not model weekly limits or rewards.</p>';
+  if(lodge)lodge.innerHTML='<h3>World Boss Encounter</h3><p class="note">Ashlyn has no Hunter’s Lodge kill milestones. This simulates one fresh attempt. Weekly milestone rewards use the size reached by your best attempt that week; community progress and weekly rewards are outside this estimate.</p>';
  };
  resultMarkup=function(a,c,pinned=false){if(!a.ashlyn)return oldMarkup(a,c,pinned);
-  return `${pinned?'':'<div id="result-stale-notice" class="result-stale-notice" role="status" hidden><b>Out of Date</b><span>Setup changed. Run again to update.</span></div>'}<div class="results-head"><div><h2>${pinned?'Pinned Ashlyn Attempt':'Ashlyn Attempt'}</h2><p class="note">Vampire Lord Ashlyn · ${a.n} fresh attempts · 2-minute limit</p></div>${pinned?'':'<button id="pin-result">Pin for comparison</button>'}</div><div class="panel result-hero"><div><span class="metric-label">Average Damage</span><strong class="big">${fmt(a.damage)}</strong><span class="range">${fmt(a.damageLow)}–${fmt(a.damageHigh)} typical attempt range</span></div><div class="result-side"><span class="metric-label">Attempt Outcomes</span><b>Chest Drop Chance <span>${a.chestChance===undefined?'—':pct(a.chestChance,2)}</span></b><span class="${a.deathChance?'danger':''}">Death Rate <strong>${pct(a.deathChance,1)}</strong></span><span>Food Used <strong>${fmt(a.food,2)}</strong></span></div></div>${pinned?'':`<div class="ashlyn-run-controls"><label class="field" for="ashlyn-run-count"><span>Number of Runs</span><select id="ashlyn-run-count">${runCounts.map(n=>`<option value="${n}" ${n===runCount(config)?'selected':''}>${n}</option>`).join('')}</select></label><button type="button" id="ashlyn-rerun">Rerun</button></div>`}`;
+  return `${pinned?'':'<div id="result-stale-notice" class="result-stale-notice" role="status" hidden><b>Out of Date</b><span>Setup changed. Run again to update.</span></div>'}<div class="results-head"><div><h2>${pinned?'Pinned Ashlyn Attempt':'Ashlyn Attempt'}</h2><p class="note">Vampire Lord Ashlyn · ${a.n} fresh attempts · 2-minute limit</p></div>${pinned?'':'<button id="pin-result">Pin for comparison</button>'}</div><div class="panel result-hero"><div><span class="metric-label">Average Damage</span><strong class="big">${fmt(a.damage)}</strong><span class="range">${fmt(a.damageLow)}–${fmt(a.damageHigh)} typical attempt range</span></div><div class="result-side"><span class="metric-label">Attempt Outcomes</span><b>Any Chest Chance <span>${a.chestChance===undefined?'—':pct(a.chestChance,2)}</span></b><b>Full Chest Chance <span>${a.fullChestChance===undefined?'—':pct(a.fullChestChance,2)}</span></b><span class="${a.deathChance?'danger':''}">Death Rate <strong>${pct(a.deathChance,1)}</strong></span><span>Food Used <strong>${fmt(a.food,2)}</strong></span></div></div><div class="panel ashlyn-chest-results"><h3>Chest Chances per Attempt</h3><p class="note">Minor below 650,000 damage · Lesser from 650,000 · Full from 1,200,000. Each size starts at 5%; missed rolls try smaller sizes at 90%. The full chest reaches 90% at 3,000,000.</p><table><thead><tr><th>Chest</th><th>Minimum Gear Rarity</th><th>Final Chance</th></tr></thead><tbody>${rules.ASHLYN_CHEST_SIZES.map((size,i)=>`<tr><th scope="row">${esc(size.name)}</th><td>${esc(rules.getRarityByTier(size.minRarity).name)}+</td><td>${a.chestChances?pct(a.chestChances[i],2):'—'}</td></tr>`).join('')}<tr><th scope="row">No Chest</th><td>—</td><td>${a.noneChance===undefined?'—':pct(a.noneChance,2)}</td></tr></tbody></table><p class="note">Probabilities are averaged over individual simulated attempts, including early deaths. Gold, material, pet and key rules are shared by all sizes. Chance of any chest includes fallback chests.</p></div>${pinned?'':`<div class="ashlyn-run-controls"><label class="field" for="ashlyn-run-count"><span>Number of Runs</span><select id="ashlyn-run-count">${runCounts.map(n=>`<option value="${n}" ${n===runCount(config)?'selected':''}>${n}</option>`).join('')}</select></label><button type="button" id="ashlyn-rerun">Rerun</button></div>`}`;
  };
  renderComparison=function(){
   if(!baseline?.result?.ashlyn&&!result?.ashlyn){oldComparison();return;}
   if(!baseline){$('comparison').innerHTML='';return;}
   const same=baseline.result.ashlyn&&result?.ashlyn;
-  $('comparison').innerHTML=`<div class="panel baseline"><div class="panel-title"><h3>Pinned Comparison</h3><button id="clear-baseline" class="text-button">Remove pin</button></div><p class="note">${esc(baseline.name)}</p>${same?`<table><thead><tr><th>Metric</th><th>Pinned</th><th>${resultStale?'Previous Run':'Latest Run'}</th></tr></thead><tbody>${[['Damage','damage'],['Food','food'],['Death Rate','deathChance'],['Chest Drop Chance','chestChance']].map(([label,key])=>`<tr><td>${label}</td><td>${baseline.result[key]===undefined?'—':key.endsWith('Chance')?pct(baseline.result[key],2):fmt(baseline.result[key],2)}</td><td>${result[key]===undefined?'—':key.endsWith('Chance')?pct(result[key],2):fmt(result[key],2)}</td></tr>`).join('')}</tbody></table>`:'<p class="note">Run the same encounter type to compare results.</p>'}<details id="pinned-run-details"><summary>View Full Pinned Result</summary><div class="pinned-result-body">${resultMarkup(baseline.result,baseline.config,true)}</div></details></div>`;
+  $('comparison').innerHTML=`<div class="panel baseline"><div class="panel-title"><h3>Pinned Comparison</h3><button id="clear-baseline" class="text-button">Remove pin</button></div><p class="note">${esc(baseline.name)}</p>${same?`<table><thead><tr><th>Metric</th><th>Pinned</th><th>${resultStale?'Previous Run':'Latest Run'}</th></tr></thead><tbody>${[['Damage','damage'],['Food','food'],['Death Rate','deathChance'],['Any Chest Chance','chestChance'],['Full Chest Chance','fullChestChance']].map(([label,key])=>`<tr><td>${label}</td><td>${baseline.result[key]===undefined?'—':key.endsWith('Chance')?pct(baseline.result[key],2):fmt(baseline.result[key],2)}</td><td>${result[key]===undefined?'—':key.endsWith('Chance')?pct(result[key],2):fmt(result[key],2)}</td></tr>`).join('')}</tbody></table>`:'<p class="note">Run the same encounter type to compare results.</p>'}<details id="pinned-run-details"><summary>View Full Pinned Result</summary><div class="pinned-result-body">${resultMarkup(baseline.result,baseline.config,true)}</div></details></div>`;
  };
  const style=document.createElement('style');style.textContent=`
  .ashlyn-run-controls{display:flex;align-items:flex-end;gap:12px;margin:0 0 18px}

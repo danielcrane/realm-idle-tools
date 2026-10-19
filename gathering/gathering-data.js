@@ -1,4 +1,4 @@
-/* Generated from bundled Realm Idle 4.1.3.9. */
+/* Generated from bundled Realm Idle 4.1.4.0. */
 const GATHERING_DATA = {
   "resources": {
     "woodcutting": [
@@ -1050,8 +1050,8 @@ const GATHERING_DATA = {
       "pet": "Stone Golem Pet"
     }
   },
-  "sourceHash": "278c7ad7935e2af8815c2cd55381a426e1faa7dcfa2679090fba3e3acca46d84",
-  "version": "4.1.3.9",
+  "sourceHash": "0b611a30c96b09f2299d28b098b0933bb86b7042b14973b715c6eab55f645130",
+  "version": "4.1.4.0",
   "rates": {
     "woodcutting": 40,
     "mining": 30,

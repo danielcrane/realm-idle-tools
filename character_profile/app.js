@@ -167,7 +167,7 @@
     const mult=R.getRarityByTier(item.rarity).mult,gear=R.EQUIPMENT[item.name]||{},tool=M.X.tools[group]?.find(t=>t.name===item.name);
     const compact=n=>n.toLocaleString('en-GB',{maximumSignificantDigits:3}),parts=[];
     if(tool)parts.push('×'+compact(tool.speed*(1+(mult-1)*.25))+' Tool Speed');
-    for(const [stat,scale,label] of [['gathSpeed','gathScale','Gathering Speed'],['prodSpeed','prodScale','Production Speed'],['skillXp','skillXpScale','All Skill XP'],['skillSpeed','skillScale',(M.skills[gear.skillOf]||'Skill')+' Speed'],['treasureFind','treasureScale','Treasure Find']]){
+    for(const [stat,scale,label] of [['gathSpeed','gathScale','Gathering Speed'],['prodSpeed','prodScale','Production Speed'],['skillXp','skillXpScale','All Skill XP'],['skillSpeed','skillScale',(M.skills[gear.skillOf]||'Skill')+' Speed'],['treasureFind','treasureScale',({woodcutting:'Bird Nest Chance',mining:'Gem Bag Chance',fishing:'Underwater Chest Chance'}[gear.skillOf]||'Treasure Find')]]){
       if(gear[stat])parts.push('+'+compact((gear[stat]+(mult-1)*(gear[scale]||0))*100)+'% '+label);
     }
     return `<div class="skilling-item-stats" aria-label="Item bonuses at selected rarity">${parts.map(p=>`<span>${esc(p)}</span>`).join('')}</div>`;
