@@ -1,4 +1,4 @@
-// Generated from Realm Idle 4.1.4.0; do not edit by hand.
+// Generated from Realm Idle 4.1.4.1; do not edit by hand.
 const SkillBossSource=(()=>{
 const SKILL_BOSSES = [
   {id:'skill_boss_treant', name:'Elder Treant', level:3271, skill:'woodcutting', img:'Assets/SWB/treantboss.png', color:'#6ee7b7',
@@ -27,8 +27,9 @@ const SKILL_BOSS = {
   attemptsPerWeek:5, attemptTicks:200,   
   
   
-  hp:20000000000,
-  milestones:[0.1,0.3,0.6,1],
+  
+  hp:80000000000,
+  milestones:[0.025,0.075,0.15,0.25,0.5,1],
   dmgPerSpeed:125,           
   
   
@@ -51,7 +52,7 @@ const SKILL_BOSS = {
   
   lowLvl:[1,40], lowLines:1,
   stackRefMs:8000, stackMaxScale:3,   
-  weekDmgCap:40000000,       
+  weekDmgCap:80000000,       
   chestBands:[
     {suffix:'Minor', upTo:250000,  mult:0.5, lvl:[1,50],   lines:3, qty:[400,800],   extraChance:0.50, extraDepth:3, extraChance2:0, toolMin:8, toolChance:0.15, armorChance:0.10, petChance:0.002},
     {suffix:'',      upTo:1500000, mult:1,   lvl:[40,100], lines:4, qty:[1500,3000], extraChance:0.60, extraDepth:5, extraChance2:0, toolMin:11, toolChance:0.08, armorChance:0.05, petChance:0.004},
@@ -72,6 +73,6 @@ function swbChestFor(boss, dmg){
   const fallback = i > 0 ? {band:i-1, name:boss.chests[i-1], chance:SKILL_BOSS.cacheMaxChance} : null;
   return {band:i, name:boss.chests[i], chance, fallback};
 }
-return {bosses:SKILL_BOSSES,config:SKILL_BOSS,chest:swbChestFor,bossFor:skillBossFor,sourceHash:'0b611a30c96b09f2299d28b098b0933bb86b7042b14973b715c6eab55f645130'};
+return {bosses:SKILL_BOSSES,config:SKILL_BOSS,chest:swbChestFor,bossFor:skillBossFor,sourceHash:'e5562b291c00b66826f840666a3240eb8464ff77865881028e3fd9a7168a22cb'};
 })();
 if(typeof module!=='undefined')module.exports=SkillBossSource;

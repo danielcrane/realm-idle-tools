@@ -26,11 +26,12 @@ const canonicalPets=new Map(petGroups.flatMap(p=>[p.name,...p.aliases].map(n=>[n
 const clone=x=>JSON.parse(JSON.stringify(x));
 const num=(v,d,min,max)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):d;
 function rng(seed){let x=seed>>>0;return ()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};}
-function defaults(){return {version:1,levels:{attack:30,strength:30,defense:30,ranged:30,magic:30,divinity:130},equip:Object.fromEntries(slots.map(slot=>[slot,null])),rarities:{},prayer:'',zone:'meadow',target:'guard',mode:'active',minutes:60,trials:48,seed:4136,hpPercent:100,autoEat:true,threshold:50,foodWorstFirst:false,foods:[{name:'Cooked Minnow',qty:1}],ammo:[],infiniteFood:false,advancedAmmo:false,infiniteAmmo:true,ammoWorstFirst:false,infinitePotions:false,infiniteCandies:false,potions:[],candy:'',candyMinutes:60,candyStrength:0.5,weather:'none',season:'none',museum:{},museumMode:'manual',collection:{},killLog:{},bosses:[],vip:true,vip2:true,communityTier:4,communityXP:.05,communityDrops:.05,progression:false};}
+function defaults(){return {version:1,levels:{attack:30,strength:30,defense:30,ranged:30,magic:30,divinity:130},equip:Object.fromEntries(slots.map(slot=>[slot,null])),rarities:{},prayer:'',zone:'meadow',target:'guard',mode:'active',minutes:60,trials:48,seed:4136,hpPercent:100,autoEat:true,threshold:50,foodWorstFirst:false,foods:[{name:'Cooked Minnow',qty:1}],ammo:[],infiniteFood:false,advancedAmmo:false,fallbackRune:'',infiniteAmmo:true,ammoWorstFirst:false,infinitePotions:false,infiniteCandies:false,potions:[],candy:'',candyMinutes:60,candyStrength:0.5,weather:'none',season:'none',museum:{},museumMode:'manual',collection:{},killLog:{},bosses:[],vip:true,vip2:true,communityTier:4,communityXP:.05,communityDrops:.05,progression:false};}
 function normalize(raw={}){
  const c={...defaults(),...clone(raw)};
  c.singleKill=raw.singleKill===true;
  c.advancedAmmo=raw.advancedAmmo===true;
+ c.fallbackRune=c.advancedAmmo&&R.EQUIPMENT[c.fallbackRune]?.infinite?c.fallbackRune:'';
  c.infiniteAmmo=c.advancedAmmo?raw.infiniteAmmo===true:true;
  c.levels=Object.fromEntries(skillNames.map(s=>[s,Math.floor(num(c.levels?.[s],1,1,130))]));
  c.exactXP=Object.fromEntries(skillNames.map(s=>{const xp=c.exactXP?.[s];return [s,typeof xp==='number'&&Number.isFinite(xp)&&xp>=0&&xp<=Number.MAX_SAFE_INTEGER&&R.getLevel(xp)===c.levels[s]?xp:R.getXPFor(c.levels[s])];}));
@@ -91,7 +92,8 @@ function makeContext(raw,seed){
  if(c.mode==='offline')g.hp=g.maxHp;
  for(const f of c.foods)g.inv[f.name]=(g.inv[f.name]||0)+f.qty;
  for(const a of c.ammo){g.itemRarities[a.name]??={};g.itemRarities[a.name][a.tier]=(g.itemRarities[a.name][a.tier]||0)+a.qty;}
- if(R.EQUIPMENT[c.equip.ammo]?.infinite)g.unlockedRunes=[c.equip.ammo];
+ g.unlockedRunes=[...new Set([R.EQUIPMENT[c.equip.ammo]?.infinite?c.equip.ammo:null,c.fallbackRune].filter(Boolean))];
+ if(c.fallbackRune&&c.fallbackRune!==c.equip.ammo)g.inv[c.fallbackRune]=1;
  const weather={};for(const b of [R.WEATHERS[c.weather]?.bonus,R.SEASONS[c.season]?.bonus])for(const [k,v] of Object.entries(b||{}))weather[k]=(weather[k]||0)+v;
  const env={now:1,weather,vip:c.vip,vip2:c.vip2,candy:0,random:rng(seed??c.seed)};
  env.museum=clone(c.museum);

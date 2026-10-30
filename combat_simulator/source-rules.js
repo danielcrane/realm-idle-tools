@@ -1,4 +1,4 @@
-/* GENERATED from bundled Realm Idle 4.1.4.0. Run node tools/extract.cjs. */
+/* GENERATED from bundled Realm Idle 4.1.4.1. Run node tools/extract.cjs. */
 (function(root){ 'use strict';
 const CC_TIERS = [
   {at:5000,  key:'gather', label:'+5% Gathering Speed'},
@@ -543,14 +543,17 @@ const POTIONS = {
   'Strength Potion': {stat:'str_pct',value:0.01,flat:25,attacks:250,level:22,desc:'+1% STR (min +25) for 250 attacks'},
   'Greater Strength Potion': {stat:'str_pct',value:0.015,flat:50,attacks:250,level:48,desc:'+1.5% STR (min +50) for 250 attacks'},
   'Supreme Strength Potion': {stat:'str_pct',value:0.02,flat:85,attacks:250,level:73,desc:'+2% STR (min +85) for 250 attacks'},
+  'Frost Strength Potion': {stat:'str_pct',value:0.025,flat:100,attacks:250,level:86,desc:'+2.5% STR (min +100) for 250 attacks'},
   'Minor Ranging Potion': {stat:'rng_pct',value:0.005,flat:10,attacks:250,level:8,desc:'+0.5% RNG (min +10) for 250 attacks'},
   'Ranging Potion': {stat:'rng_pct',value:0.01,flat:25,attacks:250,level:28,desc:'+1% RNG (min +25) for 250 attacks'},
   'Greater Ranging Potion': {stat:'rng_pct',value:0.015,flat:50,attacks:250,level:56,desc:'+1.5% RNG (min +50) for 250 attacks'},
   'Supreme Ranging Potion': {stat:'rng_pct',value:0.02,flat:85,attacks:250,level:79,desc:'+2% RNG (min +85) for 250 attacks'},
+  'Frost Ranging Potion': {stat:'rng_pct',value:0.025,flat:100,attacks:250,level:90,desc:'+2.5% RNG (min +100) for 250 attacks'},
   'Minor Magic Potion': {stat:'mag_pct',value:0.005,flat:10,attacks:250,level:12,desc:'+0.5% MAG (min +10) for 250 attacks'},
   'Magic Potion': {stat:'mag_pct',value:0.01,flat:25,attacks:250,level:32,desc:'+1% MAG (min +25) for 250 attacks'},
   'Greater Magic Potion': {stat:'mag_pct',value:0.015,flat:50,attacks:250,level:60,desc:'+1.5% MAG (min +50) for 250 attacks'},
   'Supreme Magic Potion': {stat:'mag_pct',value:0.02,flat:85,attacks:250,level:82,desc:'+2% MAG (min +85) for 250 attacks'},
+  'Frost Magic Potion': {stat:'mag_pct',value:0.025,flat:100,attacks:250,level:92,desc:'+2.5% MAG (min +100) for 250 attacks'},
   'Lifesteal Elixir': {stat:'lifesteal',value:0.005,attacks:250,level:35,desc:'+0.5% LS for 250 attacks'},
   'Greater Lifesteal Elixir': {stat:'lifesteal',value:0.01,attacks:250,level:62,desc:'+1% LS for 250 attacks'},
   'Supreme Lifesteal Elixir': {stat:'lifesteal',value:0.015,attacks:250,level:84,desc:'+1.5% LS for 250 attacks'},
@@ -887,12 +890,13 @@ const WORLD_BOSS = {
   
   
   
-  hp:5000000000,
-  milestones:[0.1,0.3,0.6,1],
+  
+  hp:20000000000,
+  milestones:[0.025,0.075,0.15,0.25,0.5,1],
   gearDropChance:0.004, petDropChance:0.005,   
   keyDropChance:0.05,                    
   gearMinRarity:14,                      
-  weekDmgCap:50000000,                   
+  weekDmgCap:100000000,                  
   
   
   
@@ -2027,6 +2031,7 @@ const SVG = {
   strength_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h2v1H5zM9 5h2v1H9zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM5 6h6v1H5zM4 7h9v1H4z"/><path fill="#c8d4e0" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#ef4444" d="M3 8h10v1H3zM3 9h2v1H3zM6 9h3v1H6zM10 9h3v1H10zM2 10h3v1H2zM10 10h3v1H10zM2 11h3v1H2zM6 11h3v1H6zM10 11h2v1H10zM4 12h7v1H4z"/><path fill="#991b1b" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/><path fill="#ffe4e4" d="M5 9h1v1H5zM9 9h1v1H9zM5 10h5v1H5zM5 11h1v1H5zM9 11h1v1H9z"/></svg>`,
   greater_strength_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 0h2v1H7zM6 1h1v1H6zM9 1h1v1H9zM6 2h1v1H6zM9 2h1v1H9zM5 3h1v1H5zM10 3h1v1H10zM6 4h1v1H6zM9 4h1v1H9zM4 5h3v1H4zM9 5h3v1H9zM2 6h2v1H2zM12 6h2v1H12zM1 7h1v1H1zM14 7h1v1H14zM0 8h1v1H0zM15 8h1v1H15zM0 9h1v1H0zM15 9h1v1H15zM0 10h1v1H0zM15 10h1v1H15zM0 11h1v1H0zM15 11h1v1H15zM1 12h1v1H1zM14 12h1v1H14zM2 13h1v1H2zM13 13h1v1H13zM3 14h3v1H3zM10 14h3v1H10zM6 15h4v1H6z"/><path fill="#9a6a3c" d="M7 1h1v1H7z"/><path fill="#6a4424" d="M8 1h1v1H8zM7 2h2v1H7z"/><path fill="#8a94a6" d="M6 3h1v1H6zM8 3h2v1H8z"/><path fill="#d0d8e4" d="M7 3h1v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM4 6h8v1H4zM3 7h11v1H3z"/><path fill="#dbe4ee" d="M2 7h1v1H2zM1 8h1v1H1zM1 9h1v1H1z"/><path fill="#ef4444" d="M2 8h12v1H2zM2 9h4v1H2zM7 9h3v1H7zM11 9h3v1H11zM1 10h5v1H1zM11 10h3v1H11zM1 11h5v1H1zM7 11h3v1H7zM11 11h2v1H11zM3 12h9v1H3zM5 13h6v1H5z"/><path fill="#991b1b" d="M14 8h1v1H14zM14 9h1v1H14zM14 10h1v1H14zM13 11h2v1H13zM2 12h1v1H2zM12 12h2v1H12zM3 13h2v1H3zM11 13h2v1H11zM6 14h4v1H6z"/><path fill="#ffe4e4" d="M6 9h1v1H6zM10 9h1v1H10zM6 10h5v1H6zM6 11h1v1H6zM10 11h1v1H10z"/></svg>`,
   supreme_strength_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#140e06" d="M5 0h1v1H5zM10 0h1v1H10zM5 1h1v1H5zM10 1h1v1H10zM6 2h1v1H6zM9 2h1v1H9zM5 3h2v1H5zM9 3h2v1H9zM4 4h1v1H4zM11 4h1v1H11zM3 5h1v1H3zM12 5h1v1H12zM2 6h1v1H2zM13 6h1v1H13zM1 7h1v1H1zM14 7h1v1H14zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM2 11h1v1H2zM13 11h1v1H13zM3 12h1v1H3zM12 12h1v1H12zM4 13h1v1H4zM11 13h1v1H11zM5 14h6v1H5z"/><path fill="#d4a024" d="M6 0h4v1H6zM7 1h3v1H7zM7 2h2v1H7zM5 13h1v1H5zM7 13h4v1H7z"/><path fill="#ffe08a" d="M6 1h1v1H6zM6 13h1v1H6z"/><path fill="#3e3a34" d="M7 3h2v1H7zM6 4h5v1H6zM5 5h7v1H5z"/><path fill="#fff1c8" d="M5 4h1v1H5zM4 5h1v1H4zM3 6h1v1H3zM2 7h1v1H2zM2 8h1v1H2z"/><path fill="#ef4444" d="M4 6h8v1H4zM3 7h10v1H3zM3 8h3v1H3zM7 8h3v1H7zM11 8h2v1H11zM2 9h4v1H2zM11 9h2v1H11zM2 10h4v1H2zM7 10h3v1H7zM11 10h1v1H11zM3 11h8v1H3zM5 12h5v1H5z"/><path fill="#991b1b" d="M12 6h1v1H12zM13 7h1v1H13zM13 8h1v1H13zM13 9h1v1H13zM12 10h2v1H12zM11 11h2v1H11zM4 12h1v1H4zM10 12h2v1H10z"/><path fill="#ffe4e4" d="M6 8h1v1H6zM10 8h1v1H10zM6 9h5v1H6zM6 10h1v1H6zM10 10h1v1H10z"/></svg>`,
+  frost_strength_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#0a1a26" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h1v1H5zM10 5h1v1H10zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#e8f8ff" d="M7 2h1v1H7zM6 5h1v1H6zM9 5h1v1H9zM5 6h2v1H5zM8 6h1v1H8zM10 6h1v1H10zM5 7h1v1H5zM11 7h1v1H11z"/><path fill="#9fd8e8" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#4a6a80" d="M7 4h2v1H7zM7 5h2v1H7zM7 6h1v1H7zM9 6h1v1H9zM4 7h1v1H4zM6 7h5v1H6zM12 7h1v1H12z"/><path fill="#e8f8ff" d="M7 2h1v1H7zM6 5h1v1H6zM9 5h1v1H9zM5 6h2v1H5zM8 6h1v1H8zM10 6h1v1H10zM5 7h1v1H5zM11 7h1v1H11z"/><path fill="#f0fbff" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#ef4444" d="M3 8h10v1H3zM3 9h2v1H3zM6 9h3v1H6zM10 9h3v1H10zM2 10h3v1H2zM10 10h3v1H10zM2 11h3v1H2zM6 11h3v1H6zM10 11h2v1H10zM4 12h7v1H4z"/><path fill="#ffe4e4" d="M5 9h1v1H5zM9 9h1v1H9zM5 10h5v1H5zM5 11h1v1H5zM9 11h1v1H9z"/><path fill="#991b1b" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
   
   minor_defense_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM5 4h1v1H5zM10 4h1v1H10zM5 5h1v1H5zM10 5h1v1H10zM4 6h1v1H4zM11 6h1v1H11zM4 7h1v1H4zM11 7h1v1H11zM4 8h1v1H4zM11 8h1v1H11zM4 9h1v1H4zM11 9h1v1H11zM4 10h1v1H4zM11 10h1v1H11zM4 11h1v1H4zM11 11h1v1H11zM5 12h1v1H5zM10 12h1v1H10zM6 13h4v1H6z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M6 4h4v1H6zM7 5h3v1H7z"/><path fill="#c8d4e0" d="M6 5h1v1H6zM5 6h1v1H5zM5 7h1v1H5z"/><path fill="#3b82f6" d="M6 6h5v1H6zM5 8h1v1H5zM5 9h1v1H5zM5 10h2v1H5zM6 11h2v1H6z"/><path fill="#e0ecff" d="M6 7h5v1H6zM6 8h5v1H6zM6 9h5v1H6zM7 10h3v1H7zM8 11h1v1H8z"/><path fill="#1e40af" d="M10 10h1v1H10zM5 11h1v1H5zM9 11h2v1H9zM6 12h4v1H6z"/></svg>`,
   defense_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h2v1H5zM9 5h2v1H9zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM5 6h6v1H5zM4 7h9v1H4z"/><path fill="#c8d4e0" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#3b82f6" d="M3 8h2v1H3zM10 8h3v1H10zM3 9h2v1H3zM10 9h3v1H10zM2 10h3v1H2zM10 10h3v1H10zM2 11h4v1H2zM9 11h3v1H9zM4 12h3v1H4zM8 12h3v1H8z"/><path fill="#e0ecff" d="M5 8h5v1H5zM5 9h5v1H5zM5 10h5v1H5zM6 11h3v1H6zM7 12h1v1H7z"/><path fill="#1e40af" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
@@ -2038,11 +2043,13 @@ const SVG = {
   ranging_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h2v1H5zM9 5h2v1H9zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM5 6h6v1H5zM4 7h9v1H4z"/><path fill="#c8d4e0" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#4ade80" d="M3 8h4v1H3zM10 8h3v1H10zM3 9h5v1H3zM10 9h3v1H10zM2 10h5v1H2zM8 10h1v1H8zM10 10h3v1H10zM2 11h4v1H2zM7 11h5v1H7zM4 12h1v1H4zM6 12h5v1H6z"/><path fill="#14361f" d="M7 8h3v1H7zM8 9h2v1H8zM7 10h1v1H7zM9 10h1v1H9zM6 11h1v1H6zM5 12h1v1H5z"/><path fill="#15803d" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
   greater_ranging_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 0h2v1H7zM6 1h1v1H6zM9 1h1v1H9zM6 2h1v1H6zM9 2h1v1H9zM5 3h1v1H5zM10 3h1v1H10zM6 4h1v1H6zM9 4h1v1H9zM4 5h3v1H4zM9 5h3v1H9zM2 6h2v1H2zM12 6h2v1H12zM1 7h1v1H1zM14 7h1v1H14zM0 8h1v1H0zM15 8h1v1H15zM0 9h1v1H0zM15 9h1v1H15zM0 10h1v1H0zM15 10h1v1H15zM0 11h1v1H0zM15 11h1v1H15zM1 12h1v1H1zM14 12h1v1H14zM2 13h1v1H2zM13 13h1v1H13zM3 14h3v1H3zM10 14h3v1H10zM6 15h4v1H6z"/><path fill="#9a6a3c" d="M7 1h1v1H7z"/><path fill="#6a4424" d="M8 1h1v1H8zM7 2h2v1H7z"/><path fill="#8a94a6" d="M6 3h1v1H6zM8 3h2v1H8z"/><path fill="#d0d8e4" d="M7 3h1v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM4 6h8v1H4zM3 7h11v1H3z"/><path fill="#dbe4ee" d="M2 7h1v1H2zM1 8h1v1H1zM1 9h1v1H1z"/><path fill="#4ade80" d="M2 8h6v1H2zM11 8h3v1H11zM2 9h7v1H2zM11 9h3v1H11zM1 10h7v1H1zM9 10h1v1H9zM11 10h3v1H11zM1 11h6v1H1zM8 11h5v1H8zM3 12h3v1H3zM7 12h5v1H7zM5 13h6v1H5z"/><path fill="#14361f" d="M8 8h3v1H8zM9 9h2v1H9zM8 10h1v1H8zM10 10h1v1H10zM7 11h1v1H7zM6 12h1v1H6z"/><path fill="#15803d" d="M14 8h1v1H14zM14 9h1v1H14zM14 10h1v1H14zM13 11h2v1H13zM2 12h1v1H2zM12 12h2v1H12zM3 13h2v1H3zM11 13h2v1H11zM6 14h4v1H6z"/></svg>`,
   supreme_ranging_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#140e06" d="M5 0h1v1H5zM10 0h1v1H10zM5 1h1v1H5zM10 1h1v1H10zM6 2h1v1H6zM9 2h1v1H9zM5 3h2v1H5zM9 3h2v1H9zM4 4h1v1H4zM11 4h1v1H11zM3 5h1v1H3zM12 5h1v1H12zM2 6h1v1H2zM13 6h1v1H13zM1 7h1v1H1zM14 7h1v1H14zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM2 11h1v1H2zM13 11h1v1H13zM3 12h1v1H3zM12 12h1v1H12zM4 13h1v1H4zM11 13h1v1H11zM5 14h6v1H5z"/><path fill="#d4a024" d="M6 0h4v1H6zM7 1h3v1H7zM7 2h2v1H7zM5 13h1v1H5zM7 13h4v1H7z"/><path fill="#ffe08a" d="M6 1h1v1H6zM6 13h1v1H6z"/><path fill="#3e3a34" d="M7 3h2v1H7zM6 4h5v1H6zM5 5h7v1H5z"/><path fill="#fff1c8" d="M5 4h1v1H5zM4 5h1v1H4zM3 6h1v1H3zM2 7h1v1H2zM2 8h1v1H2z"/><path fill="#4ade80" d="M4 6h8v1H4zM3 7h5v1H3zM11 7h2v1H11zM3 8h6v1H3zM11 8h2v1H11zM2 9h6v1H2zM9 9h1v1H9zM11 9h2v1H11zM2 10h5v1H2zM8 10h4v1H8zM3 11h3v1H3zM7 11h4v1H7zM5 12h5v1H5z"/><path fill="#15803d" d="M12 6h1v1H12zM13 7h1v1H13zM13 8h1v1H13zM13 9h1v1H13zM12 10h2v1H12zM11 11h2v1H11zM4 12h1v1H4zM10 12h2v1H10z"/><path fill="#14361f" d="M8 7h3v1H8zM9 8h2v1H9zM8 9h1v1H8zM10 9h1v1H10zM7 10h1v1H7zM6 11h1v1H6z"/></svg>`,
+  frost_ranging_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#0a1a26" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h1v1H5zM10 5h1v1H10zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#e8f8ff" d="M7 2h1v1H7zM6 5h1v1H6zM9 5h1v1H9zM5 6h2v1H5zM8 6h1v1H8zM10 6h1v1H10zM5 7h1v1H5zM11 7h1v1H11z"/><path fill="#9fd8e8" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#4a6a80" d="M7 4h2v1H7zM7 5h2v1H7zM7 6h1v1H7zM9 6h1v1H9zM4 7h1v1H4zM6 7h5v1H6zM12 7h1v1H12z"/><path fill="#e8f8ff" d="M7 2h1v1H7zM6 5h1v1H6zM9 5h1v1H9zM5 6h2v1H5zM8 6h1v1H8zM10 6h1v1H10zM5 7h1v1H5zM11 7h1v1H11z"/><path fill="#f0fbff" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#4ade80" d="M3 8h4v1H3zM10 8h3v1H10zM3 9h5v1H3zM10 9h3v1H10zM2 10h5v1H2zM8 10h1v1H8zM10 10h3v1H10zM2 11h4v1H2zM7 11h5v1H7zM4 12h1v1H4zM6 12h5v1H6z"/><path fill="#14361f" d="M7 8h3v1H7zM8 9h2v1H8zM7 10h1v1H7zM9 10h1v1H9zM6 11h1v1H6zM5 12h1v1H5z"/><path fill="#15803d" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
   
   minor_magic_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM5 4h1v1H5zM10 4h1v1H10zM5 5h1v1H5zM10 5h1v1H10zM4 6h1v1H4zM11 6h1v1H11zM4 7h1v1H4zM11 7h1v1H11zM4 8h1v1H4zM11 8h1v1H11zM4 9h1v1H4zM11 9h1v1H11zM4 10h1v1H4zM11 10h1v1H11zM4 11h1v1H4zM11 11h1v1H11zM5 12h1v1H5zM10 12h1v1H10zM6 13h4v1H6z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M6 4h4v1H6zM7 5h3v1H7z"/><path fill="#c8d4e0" d="M6 5h1v1H6zM5 6h1v1H5zM5 7h1v1H5z"/><path fill="#8b5cf6" d="M6 6h5v1H6zM6 7h2v1H6zM9 7h2v1H9zM5 8h2v1H5zM5 9h1v1H5zM5 10h2v1H5zM6 11h2v1H6z"/><path fill="#efe7ff" d="M8 7h1v1H8zM7 8h3v1H7zM6 9h5v1H6zM7 10h3v1H7zM8 11h1v1H8z"/><path fill="#4c1d95" d="M10 8h1v1H10zM10 10h1v1H10zM5 11h1v1H5zM9 11h2v1H9zM6 12h4v1H6z"/></svg>`,
   magic_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h2v1H5zM9 5h2v1H9zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM5 6h6v1H5zM4 7h9v1H4z"/><path fill="#c8d4e0" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#8b5cf6" d="M3 8h4v1H3zM8 8h5v1H8zM3 9h3v1H3zM9 9h4v1H9zM2 10h3v1H2zM10 10h3v1H10zM2 11h4v1H2zM9 11h3v1H9zM4 12h3v1H4zM8 12h3v1H8z"/><path fill="#efe7ff" d="M7 8h1v1H7zM6 9h3v1H6zM5 10h5v1H5zM6 11h3v1H6zM7 12h1v1H7z"/><path fill="#4c1d95" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
   greater_magic_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 0h2v1H7zM6 1h1v1H6zM9 1h1v1H9zM6 2h1v1H6zM9 2h1v1H9zM5 3h1v1H5zM10 3h1v1H10zM6 4h1v1H6zM9 4h1v1H9zM4 5h3v1H4zM9 5h3v1H9zM2 6h2v1H2zM12 6h2v1H12zM1 7h1v1H1zM14 7h1v1H14zM0 8h1v1H0zM15 8h1v1H15zM0 9h1v1H0zM15 9h1v1H15zM0 10h1v1H0zM15 10h1v1H15zM0 11h1v1H0zM15 11h1v1H15zM1 12h1v1H1zM14 12h1v1H14zM2 13h1v1H2zM13 13h1v1H13zM3 14h3v1H3zM10 14h3v1H10zM6 15h4v1H6z"/><path fill="#9a6a3c" d="M7 1h1v1H7z"/><path fill="#6a4424" d="M8 1h1v1H8zM7 2h2v1H7z"/><path fill="#8a94a6" d="M6 3h1v1H6zM8 3h2v1H8z"/><path fill="#d0d8e4" d="M7 3h1v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM4 6h8v1H4zM3 7h11v1H3z"/><path fill="#dbe4ee" d="M2 7h1v1H2zM1 8h1v1H1zM1 9h1v1H1z"/><path fill="#8b5cf6" d="M2 8h6v1H2zM9 8h5v1H9zM2 9h5v1H2zM10 9h4v1H10zM1 10h5v1H1zM11 10h3v1H11zM1 11h6v1H1zM10 11h3v1H10zM3 12h5v1H3zM9 12h3v1H9zM5 13h6v1H5z"/><path fill="#efe7ff" d="M8 8h1v1H8zM7 9h3v1H7zM6 10h5v1H6zM7 11h3v1H7zM8 12h1v1H8z"/><path fill="#4c1d95" d="M14 8h1v1H14zM14 9h1v1H14zM14 10h1v1H14zM13 11h2v1H13zM2 12h1v1H2zM12 12h2v1H12zM3 13h2v1H3zM11 13h2v1H11zM6 14h4v1H6z"/></svg>`,
   supreme_magic_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#140e06" d="M5 0h1v1H5zM10 0h1v1H10zM5 1h1v1H5zM10 1h1v1H10zM6 2h1v1H6zM9 2h1v1H9zM5 3h2v1H5zM9 3h2v1H9zM4 4h1v1H4zM11 4h1v1H11zM3 5h1v1H3zM12 5h1v1H12zM2 6h1v1H2zM13 6h1v1H13zM1 7h1v1H1zM14 7h1v1H14zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM2 11h1v1H2zM13 11h1v1H13zM3 12h1v1H3zM12 12h1v1H12zM4 13h1v1H4zM11 13h1v1H11zM5 14h6v1H5z"/><path fill="#d4a024" d="M6 0h4v1H6zM7 1h3v1H7zM7 2h2v1H7zM5 13h1v1H5zM7 13h4v1H7z"/><path fill="#ffe08a" d="M6 1h1v1H6zM6 13h1v1H6z"/><path fill="#3e3a34" d="M7 3h2v1H7zM6 4h5v1H6zM5 5h7v1H5z"/><path fill="#fff1c8" d="M5 4h1v1H5zM4 5h1v1H4zM3 6h1v1H3zM2 7h1v1H2zM2 8h1v1H2z"/><path fill="#8b5cf6" d="M4 6h8v1H4zM3 7h5v1H3zM9 7h4v1H9zM3 8h4v1H3zM10 8h3v1H10zM2 9h4v1H2zM11 9h2v1H11zM2 10h5v1H2zM10 10h2v1H10zM3 11h5v1H3zM9 11h2v1H9zM5 12h5v1H5z"/><path fill="#4c1d95" d="M12 6h1v1H12zM13 7h1v1H13zM13 8h1v1H13zM13 9h1v1H13zM12 10h2v1H12zM11 11h2v1H11zM4 12h1v1H4zM10 12h2v1H10z"/><path fill="#efe7ff" d="M8 7h1v1H8zM7 8h3v1H7zM6 9h5v1H6zM7 10h3v1H7zM8 11h1v1H8z"/></svg>`,
+  frost_magic_potion: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#0a1a26" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h1v1H5zM10 5h1v1H10zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#e8f8ff" d="M7 2h1v1H7zM6 5h1v1H6zM9 5h1v1H9zM5 6h2v1H5zM8 6h1v1H8zM10 6h1v1H10zM5 7h1v1H5zM11 7h1v1H11z"/><path fill="#9fd8e8" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#4a6a80" d="M7 4h2v1H7zM7 5h2v1H7zM7 6h1v1H7zM9 6h1v1H9zM4 7h1v1H4zM6 7h5v1H6zM12 7h1v1H12z"/><path fill="#e8f8ff" d="M7 2h1v1H7zM6 5h1v1H6zM9 5h1v1H9zM5 6h2v1H5zM8 6h1v1H8zM10 6h1v1H10zM5 7h1v1H5zM11 7h1v1H11z"/><path fill="#f0fbff" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#8b5cf6" d="M3 8h4v1H3zM8 8h5v1H8zM3 9h3v1H3zM9 9h4v1H9zM2 10h3v1H2zM10 10h3v1H10zM2 11h4v1H2zM9 11h3v1H9zM4 12h3v1H4zM8 12h3v1H8z"/><path fill="#efe7ff" d="M7 8h1v1H7zM6 9h3v1H6zM5 10h5v1H5zM6 11h3v1H6zM7 12h1v1H7z"/><path fill="#4c1d95" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
   
   lifesteal_elixir: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM6 4h1v1H6zM9 4h1v1H9zM5 5h2v1H5zM9 5h2v1H9zM3 6h2v1H3zM11 6h2v1H11zM2 7h1v1H2zM13 7h1v1H13zM1 8h1v1H1zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z"/><path fill="#9a6a3c" d="M7 2h1v1H7z"/><path fill="#6a4424" d="M8 2h1v1H8zM7 3h2v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM5 6h6v1H5zM4 7h9v1H4z"/><path fill="#c8d4e0" d="M3 7h1v1H3zM2 8h1v1H2zM2 9h1v1H2z"/><path fill="#ec4899" d="M3 8h2v1H3zM7 8h1v1H7zM10 8h3v1H10zM3 9h2v1H3zM10 9h3v1H10zM2 10h3v1H2zM10 10h3v1H10zM2 11h4v1H2zM9 11h3v1H9zM4 12h3v1H4zM8 12h3v1H8z"/><path fill="#ffe4f1" d="M5 8h2v1H5zM8 8h2v1H8zM5 9h5v1H5zM5 10h5v1H5zM6 11h3v1H6zM7 12h1v1H7z"/><path fill="#9d174d" d="M13 8h1v1H13zM13 9h1v1H13zM13 10h1v1H13zM12 11h2v1H12zM3 12h1v1H3zM11 12h2v1H11zM5 13h6v1H5z"/></svg>`,
   greater_lifesteal_elixir: `<svg viewBox="0 0 16 16" shape-rendering="crispEdges"><path fill="#141018" d="M7 0h2v1H7zM6 1h1v1H6zM9 1h1v1H9zM6 2h1v1H6zM9 2h1v1H9zM5 3h1v1H5zM10 3h1v1H10zM6 4h1v1H6zM9 4h1v1H9zM4 5h3v1H4zM9 5h3v1H9zM2 6h2v1H2zM12 6h2v1H12zM1 7h1v1H1zM14 7h1v1H14zM0 8h1v1H0zM15 8h1v1H15zM0 9h1v1H0zM15 9h1v1H15zM0 10h1v1H0zM15 10h1v1H15zM0 11h1v1H0zM15 11h1v1H15zM1 12h1v1H1zM14 12h1v1H14zM2 13h1v1H2zM13 13h1v1H13zM3 14h3v1H3zM10 14h3v1H10zM6 15h4v1H6z"/><path fill="#9a6a3c" d="M7 1h1v1H7z"/><path fill="#6a4424" d="M8 1h1v1H8zM7 2h2v1H7z"/><path fill="#8a94a6" d="M6 3h1v1H6zM8 3h2v1H8z"/><path fill="#d0d8e4" d="M7 3h1v1H7z"/><path fill="#3a4250" d="M7 4h2v1H7zM7 5h2v1H7zM4 6h8v1H4zM3 7h11v1H3z"/><path fill="#dbe4ee" d="M2 7h1v1H2zM1 8h1v1H1zM1 9h1v1H1z"/><path fill="#ec4899" d="M2 8h4v1H2zM8 8h1v1H8zM11 8h3v1H11zM2 9h4v1H2zM11 9h3v1H11zM1 10h5v1H1zM11 10h3v1H11zM1 11h6v1H1zM10 11h3v1H10zM3 12h5v1H3zM9 12h3v1H9zM5 13h6v1H5z"/><path fill="#ffe4f1" d="M6 8h2v1H6zM9 8h2v1H9zM6 9h5v1H6zM6 10h5v1H6zM7 11h3v1H7zM8 12h1v1H8z"/><path fill="#9d174d" d="M14 8h1v1H14zM14 9h1v1H14zM14 10h1v1H14zM13 11h2v1H13zM2 12h1v1H2zM12 12h2v1H12zM3 13h2v1H3zM11 13h2v1H11zM6 14h4v1H6z"/></svg>`,
@@ -2830,7 +2837,7 @@ function _potionUse(kind, ms, silent){
       game.activeEffects.splice(i, 1);
       ended = true;
       if(!silent){
-        notify(tN('{0} wore off', getItemDisplay(e.name)), 'info');
+        notify(tN('{0} wore off', _nh(getItemDisplay(e.name))), 'info');
         if(e.stat === 'production_speed') recalcProductionSpeed();   
       }
     }
@@ -3233,6 +3240,12 @@ function _offlineConsumeAmmo(usingRanged, usingMagic){
   if(consumed) return true;
   return _ammoSwitch(usingRanged, usingMagic);
 }
+function _slotRune(name){
+  game.equip.ammo = name;
+  if(!game.equippedRarity) game.equippedRarity = {};
+  game.equippedRarity.ammo = 1;
+  if(game.inv[name] > 0){ game.inv[name]--; if(game.inv[name] <= 0) delete game.inv[name]; }
+}
 function _ammoSwitch(usingRanged, usingMagic){
   
   let foundReplacement = false;
@@ -3330,8 +3343,7 @@ function _ammoSwitch(usingRanged, usingMagic){
       game.equippedRarity.ammo = simCandidates[0].tier;
       foundReplacement = true;
     } else if(simBestRune){
-      game.equip.ammo = simBestRune.name;
-      game.equippedRarity.ammo = 1;
+      _slotRune(simBestRune.name);
       foundReplacement = true;
     }
   }
@@ -3365,7 +3377,7 @@ const rand=(a,b)=>globalThis.Math.floor(Math.random()*(b-a+1))+a;
 const noop=()=>{};
 const sfxCombat=noop;
 const updateCombatSessionDisplay=noop,renderTab=noop,updateEquippedAmmoSlot=noop,updateFoodCountInDOM=noop,triggerCombatEffect=noop,triggerEnemyAttackFX=noop,updateHeader=noop,updateStatusBanner=noop,render=noop,saveGame=noop,autoEatWithDelay=noop,recalcProductionSpeed=noop;
-const getItemDisplay=x=>x,tN=x=>x;
+const getItemDisplay=x=>x,tN=x=>x,_nh=x=>x;
 const showDamage=(n,kind)=>env.onDamage?.(n,kind);
 const notify=(message)=>{if(message==='Out of arrows!' || message==='Out of spells!' || message==='No arrows equipped!' || message==='No spell equipped!') env.stop='ammo';};
 const showOfflineModal=()=>{env.stop='death';};
@@ -3594,6 +3606,11 @@ function fightTick(){
     
     if(spellDef && spellDef.infinite){
       
+    } else if(_ammoTiers(spell).length || (!_isKeptAmmoTier(spell, 1) && game.inv[spell] > 0)){
+      
+      
+      const _t = _ammoTiers(spell);
+      if(_t.length) game.equippedRarity.ammo = _t[0];
     } else {
     
     game.equip.ammo = null;
@@ -3645,8 +3662,7 @@ function fightTick(){
       foundReplacement = true;
     } else if(bestRune){
       
-      game.equip.ammo = bestRune.name;
-      game.equippedRarity.ammo = 1;
+      _slotRune(bestRune.name);
       foundReplacement = true;
       updateEquippedAmmoSlot(bestRune.name, 1);
     }
@@ -4041,7 +4057,7 @@ function fightTick(){
 function beginFight(m){currentFight={...m,currentHp:m.hp};isProcessingDeath=false;pending=null;if(m._worldBoss)window._wbTicksLeft=m.attemptTicks;}
 function activeStep(){pending=null;fightTick();return {delay:pending?.delay||0,dead:env.stop==='death',monsterHp:currentFight?.currentHp||0};}
 function resumeFight(){const p=pending;pending=null;if(p) p.fn();return {delay:pending?.delay||0,pending:!!pending};}
-return {potionKind,potionOn,getPotion,potionValue,potionMsLeft,_potionFromCharges,_potionUse,getPetDef,equippedSkillPetBonus,getPrayerBonuses,isUsingMagic,isUsingRanged,getCombatStyle,getPlayerStats,getMaxHit,getMinHitFrac,getMinHit,getHitRangeVs,_maxIncomingHit,getPetFlatDmg,getPetWalkSpeed,getPetGoldBoost,getPetBoneDouble,getLuckMultiplier,vampireSetCount,vampireSetBonus,museumUnlocked,lodgeUnlocked,getBestiaryBonus,getBestiaryDropMult,getBestiaryDmgMult,getBestiaryDefMult,getZoneWalkReduction,getZoneBossWalkReduction,getZoneWalkReductionTotal,getZoneWalkMult,getMuseumRarity,getMuseumBonus,_isKeptFood,_autoEatFoods,getBestFood,_isKeptAmmo,_isKeptAmmoTier,_ammoTiers,_ammoPickTier,_dropKeptAmmo,_offlineConsumeAmmo,_ammoSwitch,collectionMuseumBonus,beginFight,activeStep,resumeFight,env,game};
+return {potionKind,potionOn,getPotion,potionValue,potionMsLeft,_potionFromCharges,_potionUse,getPetDef,equippedSkillPetBonus,getPrayerBonuses,isUsingMagic,isUsingRanged,getCombatStyle,getPlayerStats,getMaxHit,getMinHitFrac,getMinHit,getHitRangeVs,_maxIncomingHit,getPetFlatDmg,getPetWalkSpeed,getPetGoldBoost,getPetBoneDouble,getLuckMultiplier,vampireSetCount,vampireSetBonus,museumUnlocked,lodgeUnlocked,getBestiaryBonus,getBestiaryDropMult,getBestiaryDmgMult,getBestiaryDefMult,getZoneWalkReduction,getZoneBossWalkReduction,getZoneWalkReductionTotal,getZoneWalkMult,getMuseumRarity,getMuseumBonus,_isKeptFood,_autoEatFoods,getBestFood,_isKeptAmmo,_isKeptAmmoTier,_ammoTiers,_ammoPickTier,_dropKeptAmmo,_offlineConsumeAmmo,_slotRune,_ammoSwitch,collectionMuseumBonus,beginFight,activeStep,resumeFight,env,game};
 }
 const API={CC_TIERS,RARITIES,EQUIPMENT,MONSTERS,ZONES,POTIONS,POTION_MINUTES,POTION_KIND,FOOD_HEALS,BONE_TYPES,EVENT_PETS,BOSS_PETS,SKILL_PETS,MONSTER_PETS,PRAYERS,TOME_UNLOCKED_PRAYERS,BESTIARY_TIERS,WORLD_BOSS,ASHLYN_CHEST_SIZES,MUSEUM_TIER_MULT,MUSEUM_BASE,MUSEUM_CAP,MUSEUM_DEF_CAP,MUSEUM_DR_CAP,FORGE_MATERIAL_TIER,ASSET_PATHS,PNG_ICONS,SVG,MONSTER_TINTS,CANDY_KINDS,CANDY_TIERS,CANDY_TIER_AURA,WEATHERS,SEASONS,CANDY_DEFS,getLevel,getXPFor,hpPerDefLvl,getMaxHpFor,getRarityByTier,getItemMaterialTier,museumRarityFactor,museumFamilies,museumWeaponMult,getPngPath,icon,itemIcon,monsterIcon,candyIcon,wbChestFor,wbCacheChance,ashlynChestSize,isAshlynChest,create};
 if(typeof module!=='undefined') module.exports=API;

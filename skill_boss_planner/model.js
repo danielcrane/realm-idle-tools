@@ -28,7 +28,7 @@ const SkillBossModel=(()=>{
   const potionMinutes=num(s.potionMinutes,'Potion minutes remaining',0,1e8);
   const candyMinutes=num(s.candyMinutes,'Candy minutes remaining',0,100000);
   if(!['active','away'].includes(s.mode))throw Error('Choose an attempt mode.');
-  const used=num(s.used,'Attempts already used',0,5,true),attempts=num(s.attempts,'Planned attempts',0,5,true),ticks=num(s.ticks,'Ticks per attempt',1,200,true),remaining=num(s.remaining,'Ticks remaining',1,200,true),banked=num(s.banked,'Damage already in away attempt',0,4e7,true),awaySeconds=num(s.awaySeconds,'Time away',0,604800),prior=num(s.prior,'Previous weekly damage',0,4e7,true),best=num(s.best,'Previous best attempt',0,4e7,true);
+  const used=num(s.used,'Attempts already used',0,5,true),attempts=num(s.attempts,'Planned attempts',0,5,true),ticks=num(s.ticks,'Ticks per attempt',1,200,true),remaining=num(s.remaining,'Ticks remaining',1,200,true),banked=num(s.banked,'Damage already in away attempt',0,C.weekDmgCap,true),awaySeconds=num(s.awaySeconds,'Time away',0,604800),prior=num(s.prior,'Previous weekly damage',0,C.weekDmgCap,true),best=num(s.best,'Previous best attempt',0,C.weekDmgCap,true);
   if(s.mode==='active'&&attempts+used>5)throw Error('Planned attempts plus used attempts cannot exceed five.');
   if(best>prior)throw Error('Previous best attempt cannot exceed previous weekly damage.');
   if(s.mode==='away'&&(banked>prior||used<1))throw Error('Include the reserved away attempt in attempts used, and its banked damage in previous weekly damage.');
@@ -41,7 +41,7 @@ const SkillBossModel=(()=>{
   const p=prepare(input),st=stats(p,p.start),rot=rotation(p.start),runs=[];let t=p.start,added=0,spent=0;
   if(p.s.mode==='active'){
    for(let i=0;i<p.attempts&&t<rot.end;i++){let dmg=0,n=0;for(;n<p.ticks;n++){t+=600;if(t>=rot.end)break;dmg+=stats(p,t).tick;}spent+=n;added+=dmg;runs.push({damage:dmg,ticks:n,complete:true,reward:reward(p.boss,dmg)});}
-  }else{const n=Math.min(p.remaining,Math.floor(p.awaySeconds*1000/600)),rate=p.s.reload?Math.min(st.tick,40000):st.tick;spent=n;added=n*rate;runs.push({damage:p.banked+added,ticks:n,complete:n===p.remaining,reward:reward(p.boss,p.banked+added)});}
+  }else{const n=Math.min(p.remaining,Math.floor(p.awaySeconds*1000/600)),rate=p.s.reload?Math.min(st.tick,C.weekDmgCap/(C.attemptsPerWeek*C.attemptTicks)):st.tick;spent=n;added=n*rate;runs.push({damage:p.banked+added,ticks:n,complete:n===p.remaining,reward:reward(p.boss,p.banked+added)});}
   const finished=runs.filter(r=>r.complete),best=Math.max(p.best,...finished.map(r=>r.damage)),total=p.prior+added,capped=Math.min(C.weekDmgCap,total),expected=[0,0,0];let noChest=1;
   for(const r of finished){r.reward.probs.forEach((v,i)=>expected[i]+=v);noChest*=r.reward.none;}
   const first=runs[0],damage=first?.damage||0,band=reward(p.boss,damage).band,target=band<2?C.chestBands[band].upTo:null,requiredTick=target?Math.ceil((target-(p.s.mode==='away'?p.banked:0))/(p.s.mode==='away'?p.remaining:p.ticks)):null;

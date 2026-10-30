@@ -41,7 +41,7 @@ const XPModel = (() => {
   function weatherAt(s,t){const season=select(options.seasons,s.season),weather=select(options.weather,s.weather);if((weather.id==='snow'&&season.id!=='winter')||(weather.id==='heatwave'&&season.id!=='summer'))throw Error('Snow requires Winter; Heatwave requires Summer.');const out={};for(const b of [season.bonus||{},weather.bonus||{}])for(const [key,v]of Object.entries(b))out[key]=(out[key]||0)+v;return out;}
   function weatherSpan(s,start,end){return weatherAt(s,start);}
   // Matches source calculator ticks and offline production batching. Gathering is unbatched offline.
-  function timing(time,speed,mode,category){const raw=Math.max(1,Math.floor(time/speed));const batch=(mode==='online'||category==='production')&&raw<1000?Math.ceil(1000/raw):1;const interval=mode==='online'?Math.ceil(raw*batch/100)*100:raw*batch;return {batch,interval,seconds:interval/batch/1000};}
+  function timing(time,speed,mode,category){const raw=Math.max(1,Math.floor(time/speed));const batch=(category==='production'||(mode==='online'&&category==='gathering'))&&raw<1000?Math.ceil(1000/raw):1;const interval=raw*batch;return {batch,interval,seconds:interval/batch/1000};}
   function migrate(input={}){
     const s={...input,weatherMode:'manual'};
     for(const prefix of ['gathering','production','xp']){
