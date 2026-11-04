@@ -6,7 +6,6 @@
   const date=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(t);
   const period=row=>date(row.start)+' – '+date(row.end);
   const icon=id=>'<img src="assets/weather/'+id+'.png" width="42" height="42" alt="">';
-  const label=id=>'<span class="weather-label">'+icon(id)+'<strong>'+M.weather[id].name+'</strong></span>';
   const shortDate=t=>new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'numeric',month:'short'}).format(t);
   const bonusLines=id=>M.weather[id].bonus.split(' · ').map(bonus=>'<span class="bonus-line">'+bonus+'</span>').join('');
   function validate(S){
@@ -44,18 +43,16 @@
     const S=snapshot,isFresh=fresh(S);
     for(const id of ['options','odds-help','unavailable','upcoming-period','next-season'])$(id).hidden=!isFresh;
     $('stale').hidden=isFresh;$('retry-weather').hidden=isFresh;
-    if(!S){$('current').textContent='Weather is unavailable.';$('history').replaceChildren();return;}
+    if(!S){$('current').textContent='Weather is unavailable.';return;}
     $('freshness').textContent='Updated '+date(S.asOf)+'. Weather changes Thursday at 00:00 UTC.';
     $('upcoming-period').textContent=period(S.upcoming)+' · 00:00 UTC';
     const season=M.seasons[S.upcoming.season];
     $('next-season').innerHTML=icon(S.upcoming.season)+'<span><strong>'+season.name+'</strong><br>'+season.bonus+'</span>';
     $('current-title').textContent=isFresh?'Recent Weather':'Latest Recorded Weeks';
-    $('history-title').textContent=isFresh?'Past Three Weeks':'Three Weeks Before the Last Update';
-    $('current').innerHTML=[S.current,...S.history.slice(0,2)].map((row,i)=>'<article class="weather-pip'+(i===0?' is-current':'')+'"><h3>'+(isFresh?['Current Week','Last Week','Two Weeks Ago'][i]:['Latest Week','One Week Earlier','Two Weeks Earlier'][i])+'</h3><span class="pip-icon">'+icon(row.weather)+'</span><strong>'+M.weather[row.weather].name+'</strong><p class="pip-period">'+shortDate(row.start)+' – '+shortDate(row.end)+'</p><span class="pip-season">'+M.seasons[row.season].name+'</span></article>').join('');
-    $('options').innerHTML=S.upcoming.options.map(row=>'<article class="weather-option">'+label(row.id)+'<p class="chance">'+new Intl.NumberFormat('en-GB',{style:'percent',maximumFractionDigits:1}).format(row.chance)+'</p><p class="muted weather-bonuses">'+bonusLines(row.id)+'</p><span class="tag">'+(row.seasonal?'Seasonal · Double Weight':'Standard Weight')+'</span></article>').join('');
+    $('current').innerHTML=[S.current,...S.history.slice(0,2)].map((row,i)=>'<article class="weather-pip'+(i===0?' is-current':'')+'"><h3>'+(isFresh?['Current Week','Last Week','Two Weeks Ago'][i]:['Latest Week','One Week Earlier','Two Weeks Earlier'][i])+'</h3><span class="pip-icon">'+icon(row.weather)+'</span><strong>'+M.weather[row.weather].name+'</strong><p class="pip-period">'+shortDate(row.start)+' – '+shortDate(row.end)+'</p><p class="pip-bonuses">'+bonusLines(row.weather)+'</p></article>').join('');
+    $('options').innerHTML=S.upcoming.options.map(row=>'<article class="weather-pip weather-option"><p class="pip-chance" aria-label="'+new Intl.NumberFormat('en-GB',{style:'percent',maximumFractionDigits:1}).format(row.chance)+' chance">'+new Intl.NumberFormat('en-GB',{style:'percent',maximumFractionDigits:1}).format(row.chance)+'</p><span class="pip-icon">'+icon(row.id)+'</span><strong>'+M.weather[row.id].name+'</strong><p class="pip-bonuses">'+bonusLines(row.id)+'</p>'+(row.seasonal?'<span class="tag">Seasonal · Double Weight</span>':'')+'</article>').join('');
     const recent=[S.current,...S.history.slice(0,2)].map(row=>row.weather);
     $('unavailable').textContent='Recent weather excluded from next week: '+recent.map(id=>M.weather[id].name).join(', ')+'. Snow is available only in Winter; Heatwave only in Summer. Percentages are rounded.';
-    $('history').innerHTML=S.history.map(row=>'<tr><td>'+period(row)+'</td><td>'+M.seasons[row.season].name+'</td><td>'+label(row.weather)+'</td><td>'+M.weather[row.weather].bonus+'</td></tr>').join('');
   }
   async function refresh(){
     if(!fresh(snapshot))snapshot=readCache()||snapshot;
