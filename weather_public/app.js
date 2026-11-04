@@ -47,7 +47,7 @@
     $('freshness').textContent='Updated '+date(S.asOf)+'. Weather changes Thursday at 00:00 UTC.';
     $('upcoming-period').textContent=period(S.upcoming)+' · 00:00 UTC';
     const season=M.seasons[S.upcoming.season];
-    $('next-season').innerHTML=icon(S.upcoming.season)+'<span><strong>'+season.name+'</strong><br>'+season.bonus+'</span>';
+    $('next-season').innerHTML='<span class="pip-icon">'+icon(S.upcoming.season)+'</span><strong>'+season.name+'</strong><p class="pip-bonuses">'+season.bonus+'</p>';
     $('current-title').textContent=isFresh?'Recent Weather':'Latest Recorded Weeks';
     $('current').innerHTML=[S.current,...S.history.slice(0,2)].map((row,i)=>'<article class="weather-pip'+(i===0?' is-current':'')+'"><h3>'+(isFresh?['Current Week','Last Week','Two Weeks Ago'][i]:['Latest Week','One Week Earlier','Two Weeks Earlier'][i])+'</h3><span class="pip-icon">'+icon(row.weather)+'</span><strong>'+M.weather[row.weather].name+'</strong><p class="pip-period">'+shortDate(row.start)+' – '+shortDate(row.end)+'</p><p class="pip-bonuses">'+bonusLines(row.weather)+'</p></article>').join('');
     $('options').innerHTML=S.upcoming.options.map(row=>'<article class="weather-pip weather-option"><p class="pip-chance" aria-label="'+new Intl.NumberFormat('en-GB',{style:'percent',maximumFractionDigits:1}).format(row.chance)+' chance">'+new Intl.NumberFormat('en-GB',{style:'percent',maximumFractionDigits:1}).format(row.chance)+'</p><span class="pip-icon">'+icon(row.id)+'</span><strong>'+M.weather[row.id].name+'</strong><p class="pip-bonuses">'+bonusLines(row.id)+'</p>'+(row.seasonal?'<span class="tag">Seasonal · Double Weight</span>':'')+'</article>').join('');
