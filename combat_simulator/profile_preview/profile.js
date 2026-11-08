@@ -11,6 +11,28 @@
  newSetDialog.innerHTML=`<form id="preview-new-set-form"><div class="dialog-head"><h2 id="preview-new-set-title">Save as New Set</h2><button type="button" class="close" id="preview-new-set-cancel" aria-label="Cancel">×</button></div><div class="method-body"><label class="field"><span>Set Name</span><input id="preview-new-set-name" required autocomplete="off" value="Combat Experiment"></label><p id="preview-new-set-error" role="alert" class="danger" hidden></p><div class="preview-actions"><button type="submit" id="preview-new-set-submit">Save Set</button></div></div></form>`;
  document.body.append(newSetDialog);
  let newSetConfig=null,newSetSaving=false;
+ const deleteSetDialog=document.createElement('dialog');
+ deleteSetDialog.id='preview-delete-set-dialog';
+ deleteSetDialog.setAttribute('aria-labelledby','preview-delete-set-title');
+ deleteSetDialog.innerHTML=`<form id="preview-delete-set-form"><div class="dialog-head"><h2 id="preview-delete-set-title">Delete Saved Set</h2></div><div class="method-body"><p id="preview-delete-set-summary"></p><p>Your current simulation setup will stay available as a Custom Setup.</p><p id="preview-delete-set-error" role="alert" class="danger" hidden></p><div class="preview-actions"><button type="button" id="preview-delete-set-cancel">Cancel</button><button type="submit" id="preview-delete-set-submit">Delete Set</button></div></div></form>`;
+ document.body.append(deleteSetDialog);
+ let deleteSetId=null,deleteSetSaving=false;
+ $('preview-delete-set-cancel').addEventListener('click',()=>deleteSetDialog.close());
+ deleteSetDialog.addEventListener('cancel',e=>{if(deleteSetSaving)e.preventDefault();});
+ deleteSetDialog.addEventListener('close',()=>$('preview-delete-set')?.focus());
+ $('preview-delete-set-form').addEventListener('submit',async e=>{
+  e.preventDefault();if(deleteSetSaving)return;
+  const id=deleteSetId,error=$('preview-delete-set-error');error.hidden=true;
+  deleteSetSaving=true;$('preview-delete-set-submit').disabled=true;$('preview-delete-set-cancel').disabled=true;
+  try{
+   await writeProfile(p=>{
+    if(!p.combatSets.some(s=>s.id===id))throw Error('This set no longer exists.');
+    p.combatSets=p.combatSets.filter(s=>s.id!==id);
+   });
+   deleteSetDialog.close();$('preview-set')?.focus();
+  }catch(err){error.textContent=err.message;error.hidden=false;}
+  finally{deleteSetSaving=false;$('preview-delete-set-submit').disabled=false;$('preview-delete-set-cancel').disabled=false;}
+ });
  $('preview-new-set-cancel').addEventListener('click',()=>newSetDialog.close());
  newSetDialog.addEventListener('cancel',e=>{if(newSetSaving)e.preventDefault();});
  $('preview-new-set-form').addEventListener('submit',async e=>{
@@ -69,7 +91,7 @@
   details.insertAdjacentHTML('beforeend',`<div class="preview-actions"><button id="preview-reset-levels" ${profile?'':'disabled'}>Reset Levels to Profile</button><button id="preview-save-levels" ${profile?'':'disabled'}>Update Profile Levels</button></div>`);$('loadout').append(details);
   const set=profile?.combatSets.find(s=>s.id===meta.setId),weapon=R.EQUIPMENT[set?.equipment.weapon?.name],icon=weapon?.magic?'magic':weapon?.ranged?'ranged':weapon?'attack':'combat';
   const omitted=set?[...Object.entries(set.equipment).filter(([slot,item])=>meta.base?.equip[slot]!==item.name).map(([,item])=>item.name),...(set.pet&&meta.base?.equip.pet!==set.pet?[set.pet]:[]),...(set.blessing&&meta.base?.prayer!==set.blessing?[set.blessing]:[])]:[];
-  $('loadout').insertAdjacentHTML('afterbegin',`<div class="panel preview-set"><label for="preview-set">Saved Gear Set</label><div class="preview-set-row">${R.icon(icon,28)}<select id="preview-set" ${profile?'':'disabled'}>${options([['','Custom Setup'],...(profile?.combatSets||[]).map(s=>[s.id,s.name])],meta.setId||'')}</select></div><p id="profile-setup-state" class="profile-note">${profile?'Using Profile Values':'Manual simulation setup'}</p><div class="preview-actions"><button id="preview-reset-profile" ${profile?'':'disabled'}>Reset to Profile</button><button id="preview-save-set" ${set?'':'disabled'}>Update Saved Set</button><button id="preview-new-set" ${profile?'':'disabled'}>Save as New Set</button></div>${omitted.length?`<p class="note">These saved selections are not compatible with this combat setup and were omitted: ${esc(omitted.join(', '))}.</p>`:''}</div>`);
+  $('loadout').insertAdjacentHTML('afterbegin',`<div class="panel preview-set"><label for="preview-set">Saved Gear Set</label><div class="preview-set-row">${R.icon(icon,28)}<select id="preview-set" ${profile?'':'disabled'}>${options([['','Custom Setup'],...(profile?.combatSets||[]).map(s=>[s.id,s.name])],meta.setId||'')}</select></div><p id="profile-setup-state" class="profile-note">${profile?'Using Profile Values':'Manual simulation setup'}</p><div class="preview-actions"><button id="preview-reset-profile" ${profile?'':'disabled'}>Reset to Profile</button><button id="preview-save-set" ${set?'':'disabled'}>Update Saved Set</button><button id="preview-new-set" ${profile?'':'disabled'}>Save as New Set</button><button id="preview-delete-set" ${set?'':'disabled'}>Delete Set</button></div>${omitted.length?`<p class="note">These saved selections are not compatible with this combat setup and were omitted: ${esc(omitted.join(', '))}.</p>`:''}</div>`);
   $('loadout').insertAdjacentHTML('beforeend',`<details id="preview-bonuses" class="panel" ${bonusOpen?'open':''}><summary>Character Bonuses${status()?.bonuses?' · Modified':profile?' · From Profile':''}</summary><div id="preview-bonus-summary"></div><label class="check"><input id="preview-bonus-toggle" type="checkbox" ${bonusOverride||!profile?'checked':''}>Override for This Simulation</label><div id="preview-bonus-controls" ${profile&&!bonusOverride?'hidden':''}></div></details>`);
   connection();updateStatus();
  };
@@ -166,6 +188,11 @@
    case 'preview-reset-levels':for(const s of E.skillNames){config.levels[s]=meta.base.levels[s];config.exactXP[s]=meta.base.exactXP[s];}changed();break;
    case 'preview-save-levels':await writeProfile(p=>{for(const s of E.skillNames)if(p.skills[s].level!==edited.levels[s])p.skills[s]={level:edited.levels[s],xp:null};});break;
    case 'preview-save-set':await writeProfile(p=>{const index=p.combatSets.findIndex(s=>s.id===selectedId);if(index<0)throw Error('This set no longer exists. Save as a new set instead.');p.combatSets[index]=B.setFromConfig(edited,p.combatSets[index].id,p.combatSets[index].name);});break;
+   case 'preview-delete-set':{
+    const set=profile?.combatSets.find(s=>s.id===selectedId);if(!set)break;
+    deleteSetId=set.id;$('preview-delete-set-summary').textContent=`Delete "${set.name}"? This removes only this saved gear set.`;
+    $('preview-delete-set-error').hidden=true;deleteSetDialog.showModal();$('preview-delete-set-cancel').focus();break;
+   }
    case 'preview-new-set':{
     newSetConfig=edited;$('preview-new-set-name').value='Combat Experiment';$('preview-new-set-error').hidden=true;
     newSetDialog.showModal();$('preview-new-set-name').focus();$('preview-new-set-name').select();break;

@@ -33,7 +33,9 @@
   const report=text=>{status.textContent=text;};
   function render(rows){
    characters=rows;
-   if(!rows.some(row=>row.id===M.characterId))rows.push({id:M.characterId,name:M.characterId==='default'?'First Character':'Character Unavailable'});
+   const saved=rows.some(row=>row.id===M.characterId);
+   if(!saved)rows=[...rows,{id:M.characterId,name:rows.length?'Character Unavailable':'No Saved Characters'}];
+   const deleteButton=actions.querySelector('#delete-character');if(deleteButton)deleteButton.disabled=!saved;
    const counts=new Map();for(const row of rows)counts.set(row.name,(counts.get(row.name)||0)+1);
    select.replaceChildren(...rows.map(row=>new Option(row.name+(counts.get(row.name)>1?' · '+row.id.slice(0,8):''),row.id)));
    const mode=legacySelect?.value||source?.mode||'saved';
@@ -74,6 +76,22 @@
    document.body.append(dialog);let duplicate=false;
    function open(copy){duplicate=copy;dialog.querySelector('h2').textContent=copy?'Duplicate Character':'New Character';dialog.querySelector('input').value='';dialog.querySelector('[role="alert"]').textContent='';dialog.showModal();dialog.querySelector('input').focus();}
    button('new-character','New Character',()=>open(false));button('duplicate-character','Duplicate Character',()=>open(true));
+   const deleteDialog=document.createElement('dialog');deleteDialog.id='delete-character-dialog';
+   deleteDialog.setAttribute('aria-labelledby','delete-character-title');
+   deleteDialog.innerHTML='<form><h2 id="delete-character-title">Delete Character</h2><p id="delete-character-summary"></p><p>This deletes the profile, gear sets, inventory, and saved calculator setups for this character in this browser. Export a backup first if you want to keep it.</p><p id="delete-character-error" role="alert"></p><div class="actions"><button type="button" id="cancel-delete-character">Cancel</button><button type="submit" class="danger" id="confirm-delete-character">Delete Character</button></div></form>';
+   document.body.append(deleteDialog);
+   button('delete-character','Delete Character',()=>{
+    const row=M.listCharacters(localStorage).find(row=>row.id===M.characterId);if(!row)return;
+    deleteDialog.querySelector('#delete-character-summary').textContent=`Delete "${row.name}"? This cannot be undone.`;
+    deleteDialog.querySelector('[role="alert"]').textContent='';deleteDialog.showModal();deleteDialog.querySelector('#cancel-delete-character').focus();
+   });
+   deleteDialog.querySelector('#cancel-delete-character').onclick=()=>deleteDialog.close();
+   deleteDialog.addEventListener('close',()=>actions.querySelector('#delete-character').focus());
+   deleteDialog.querySelector('form').onsubmit=event=>{
+    event.preventDefault();
+    try{M.deleteCharacter(localStorage,M.characterId);document.dispatchEvent(new Event('character-deleted'));navigate(M.listCharacters(localStorage)[0]?.id||'default');}
+    catch(error){deleteDialog.querySelector('[role="alert"]').textContent=error.message;}
+   };
    dialog.querySelector('#cancel-new-character').onclick=()=>dialog.close();
    dialog.querySelector('form').onsubmit=event=>{
     event.preventDefault();

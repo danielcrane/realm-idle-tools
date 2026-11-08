@@ -62,6 +62,7 @@
     return X.gear.filter(e=>e.slot===(slot==='ring2'?'ring1':slot)&&(!e.skillOf||e.skillOf===skill)).map(e=>e.name).sort();
   }
   function setSlots(kind,skill){return kind==='combat'?Object.keys(slots):[...(X.tools[skill]?['helm','body','legs','boots','gloves']:[]),'amulet','ring1','ring2'];}
+  function offHandAllowed(weaponName,offHandName){const weapon=R.EQUIPMENT[weaponName];return !offHandName||!weapon?.twoHand||!!(weapon.ranged&&R.EQUIPMENT[offHandName]?.quiver);}
   function cap(style,stat){return stat==='def'?R.MUSEUM_DEF_CAP[style]:stat==='dr'?R.MUSEUM_DR_CAP[style]:R.MUSEUM_CAP[stat]??1e12;}
   function museumBonuses(p){
     const result=emptyBonuses();
@@ -105,7 +106,7 @@
         const skill=kind==='skilling'?choice(row.skill,Object.keys(X.skills),'skilling skill'):null;
         const set=newSet(kind,id,name,skill);set.pet=canonicalPet(choice(row.pet,['',...petVariants.map(p=>p.name)],'set pet'));set.blessing=choice(row.blessing,['',...blessings.map(b=>b.id)],'blessing');
         for(const [slot,value] of Object.entries(obj(row.equipment,'Equipment'))){choice(slot,setSlots(kind,skill),'equipment slot');obj(value,'Equipment item');const item=choice(value.name,gearOptions(kind,skill,slot),'equipment item');const rarity=num(value.rarity,1,21,'Item rarity');assert(!R.EQUIPMENT[item]?.infinite||item==='Wraith Rune'||rarity===1,'Only Wraith Rune supports rarities above Common; other infinite runes use Common rarity.');set.equipment[slot]={name:item,rarity};}
-        assert(!(R.EQUIPMENT[set.equipment.weapon?.name]?.twoHand&&set.equipment.shield),'A two-handed weapon cannot be combined with an off-hand item.');
+        assert(offHandAllowed(set.equipment.weapon?.name,set.equipment.shield?.name),'A two-handed weapon cannot be combined with this off-hand item. Bows allow quivers.');
         if(row.tool!==null){assert(kind==='skilling'&&X.tools[skill],'This set cannot have a gathering tool.');obj(row.tool,'Tool');set.tool={name:choice(row.tool.name,X.tools[skill].map(t=>t.name),'tool'),rarity:num(row.tool.rarity,1,21,'Tool rarity')};}
         return set;
       });
@@ -151,6 +152,23 @@
     const id=crypto.randomUUID(),key=LEGACY_STORAGE_KEY+':character:'+id;
     storage.setItem(key,JSON.stringify(validate(profile)));return id;
   }
-  const api={R,X,STORAGE_KEY,LEGACY_STORAGE_KEY,characterId,scopedKey,listCharacters,createCharacter,skills,combatSkills,slots,pets,petVariants,petEffectKey,canonicalPet,museumItems,blessings,monsters,defaults,newSet,setSlots,gearOptions,skillingGroups,jewelrySlots,emptySkillingGear,bestItemOptions,minimumSkillingRarity,migrateSkillingSets,museumBonuses,communityBonuses,blessingAvailable,warnings,cap,validate,decode,encode};
+  function deletionKey(id){
+    assert(id==='default'||/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(id),'Invalid character ID.');
+    return LEGACY_STORAGE_KEY+'-deleted:'+id;
+  }
+  function isCharacterDeleted(storage,id=characterId){return storage.getItem(deletionKey(id))!==null;}
+  function deleteCharacter(storage,id){
+    const marker=deletionKey(id),suffix=id==='default'?'':':character:'+id;
+    const bases=[LEGACY_STORAGE_KEY,'realm-public-combat-profile-preview-v1','realm-public-combat-profile-preview-baseline','realm-public-combat-profile-preview-tab','realm-public-combat-profile-preview-link','realm-public-combat-profile-preview-profile','realm-public-xp-profile-prototype-v1','realm-public-skill-boss-profile-v1'].map(key=>key+suffix);
+    const keys=[];
+    for(let i=0;i<storage.length;i++){
+      const key=storage.key(i);
+      if(!key.startsWith(LEGACY_STORAGE_KEY+'-deleted:')&&bases.some(base=>key===base||key.startsWith(base+'-')))keys.push(key);
+    }
+    // Keep a tombstone so an old tab or the private recovery snapshot cannot recreate it.
+    storage.setItem(marker,'1');
+    for(const key of keys)storage.removeItem(key);
+  }
+  const api={R,X,STORAGE_KEY,LEGACY_STORAGE_KEY,characterId,scopedKey,listCharacters,createCharacter,deleteCharacter,isCharacterDeleted,skills,combatSkills,slots,pets,petVariants,petEffectKey,canonicalPet,museumItems,blessings,monsters,defaults,newSet,setSlots,offHandAllowed,gearOptions,skillingGroups,jewelrySlots,emptySkillingGear,bestItemOptions,minimumSkillingRarity,migrateSkillingSets,museumBonuses,communityBonuses,blessingAvailable,warnings,cap,validate,decode,encode};
   if(typeof module!=='undefined')module.exports=api;else root.CharacterProfile=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

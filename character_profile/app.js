@@ -11,6 +11,8 @@
   let profile=M.defaults(),pendingImport=null,importSource='file',storageBlocked=false,dirty=false,zone='meadow';
   let shareMode='copy',shareCode='',shareDraft='',shareGeneration=0;
   let inventoryUI;
+  let deletedHere=false;
+  document.addEventListener('character-deleted',()=>{deletedHere=true;});
   const options=(rows,value)=>rows.map(([id,label])=>`<option value="${esc(id)}" ${String(id)===String(value)?'selected':''}>${esc(label)}</option>`).join('');
   const rarities=value=>options(R.RARITIES.map(r=>[r.tier,r.name]),value);
   const art=(key,size=30)=>R.icon(key,size).replaceAll('src="Assets/','src="combat_simulator/Assets/');
@@ -98,7 +100,7 @@
   }
   function combatGearTile(set,slot){
     const item=set.equipment[slot],r=item?R.getRarityByTier(item.rarity):{name:'None',color:'#a0b0b0'};
-    const blocked=slot==='shield'&&R.EQUIPMENT[set.equipment.weapon?.name]?.twoHand;
+    const weapon=R.EQUIPMENT[set.equipment.weapon?.name],blocked=slot==='shield'&&weapon?.twoHand&&!weapon.ranged;
     return `<div class="skilling-gear combat-gear ${item?'':'unselected'}" style="--rarity-color:${r.color}"><button class="skilling-gear-face" data-combat-pick="${slot}" aria-label="${M.slots[slot]}: ${esc(item?.name||'None')}" aria-haspopup="dialog" ${blocked?'disabled':''}><span class="slot-label">${M.slots[slot]}</span>${item?itemArt(item.name):'<span class="empty-gear-icon" aria-hidden="true">＋</span>'}<b class="skilling-gear-name">${esc(item?.name||(blocked?'Two-Handed Weapon Equipped':'Choose Gear'))}</b></button>${item?`<button class="gear-rarity" data-combat-rarity="${slot}" aria-label="${M.slots[slot]} rarity: ${r.name}" aria-haspopup="dialog" ${R.EQUIPMENT[item.name]?.infinite?'disabled title="Infinite runes use Common rarity"':''}><span>${r.name}</span><span aria-hidden="true">⌄</span></button><small class="combat-gear-stats">${esc(combatGearDescription(item.name,item.rarity))}</small>`:''}</div>`;
   }
   function renderSets(kind){
@@ -110,11 +112,11 @@
     const weapon=R.EQUIPMENT[set.equipment.weapon?.name],style=!weapon?'none':weapon.magic?'magic':weapon.ranged?'ranged':'melee';
     const styleLabel=weapon?'Combat style: '+styles[style]:'No weapon selected';
     const styleBadge=`<span class="combat-style" data-combat-style="${style}" role="img" aria-label="${styleLabel}" title="${styleLabel}">${art(style==='none'?'combat':style==='melee'?'attack':style,25)}</span>`;
-    el.innerHTML=`<div class="set-chips" aria-label="Saved combat sets">${rows.map(s=>`<button type="button" data-select-set="${esc(s.id)}" data-kind="combat" aria-pressed="${s.id===set.id}">${esc(s.name)}</button>`).join('')}</div><div class="panel"><div class="set-toolbar"><label>Set Name<span class="set-name-field">${styleBadge}<input data-edit="set-name" data-kind="combat" maxlength="80" required value="${esc(set.name)}"></span></label><div class="actions"><button type="button" data-duplicate="combat">Duplicate Set</button><button type="button" class="danger" data-delete="combat">Delete Set</button></div></div><div class="gear-grid combat-gear-grid">${combatOrder.map(slot=>combatGearTile(set,slot)).join('')}</div><div class="combat-companions"><button class="companion-choice" data-combat-pick="pet" aria-haspopup="dialog">${art(pet?.icon||'pet',36)}<span><small>Pet</small><b>${esc(set.pet||'Choose a Companion')}</b></span></button><button class="companion-choice" data-combat-pick="blessing" aria-haspopup="dialog">${art('divinity',36)}<span><small>Blessing</small><b>${blessing?'Lv. '+blessing.level+' · '+esc(blessing.name):'Choose a Blessing'}</b></span></button></div><div class="set-warnings">${M.warnings(profile,set).map(w=>`<p class="warning">${esc(w)}</p>`).join('')}</div><p class="note">Select a slot to change gear, or a colored badge to change rarity. Stats include rarity, before character bonuses. Two-handed weapons clear the off-hand slot. Infinite runes always use Common rarity. Set edits save automatically.</p></div>`;
+    el.innerHTML=`<div class="set-chips" aria-label="Saved combat sets">${rows.map(s=>`<button type="button" data-select-set="${esc(s.id)}" data-kind="combat" aria-pressed="${s.id===set.id}">${esc(s.name)}</button>`).join('')}</div><div class="panel"><div class="set-toolbar"><label>Set Name<span class="set-name-field">${styleBadge}<input data-edit="set-name" data-kind="combat" maxlength="80" required value="${esc(set.name)}"></span></label><div class="actions"><button type="button" data-duplicate="combat">Duplicate Set</button><button type="button" class="danger" data-delete="combat">Delete Set</button></div></div><div class="gear-grid combat-gear-grid">${combatOrder.map(slot=>combatGearTile(set,slot)).join('')}</div><div class="combat-companions"><button class="companion-choice" data-combat-pick="pet" aria-haspopup="dialog">${art(pet?.icon||'pet',36)}<span><small>Pet</small><b>${esc(set.pet||'Choose a Companion')}</b></span></button><button class="companion-choice" data-combat-pick="blessing" aria-haspopup="dialog">${art('divinity',36)}<span><small>Blessing</small><b>${blessing?'Lv. '+blessing.level+' · '+esc(blessing.name):'Choose a Blessing'}</b></span></button></div><div class="set-warnings">${M.warnings(profile,set).map(w=>`<p class="warning">${esc(w)}</p>`).join('')}</div><p class="note">Select a slot to change gear, or a colored badge to change rarity. Stats include rarity, before character bonuses. Two-handed weapons clear incompatible off-hand gear; bows allow quivers. Infinite runes always use Common rarity. Set edits save automatically.</p></div>`;
   }
   function openCombatPicker(slot,mode='gear'){
     if(!validDraft())return;const set=currentSet('combat');if(!set)return;
-    if(slot==='shield'&&R.EQUIPMENT[set.equipment.weapon?.name]?.twoHand)return;
+    const weapon=R.EQUIPMENT[set.equipment.weapon?.name];if(slot==='shield'&&weapon?.twoHand&&!weapon.ranged)return;
     if(mode==='rarity'&&(!set.equipment[slot]||R.EQUIPMENT[set.equipment[slot].name]?.infinite))return;
     combatPicker={setId:set.id,slot,mode,filter:'all'};
     $('combat-picker-context').textContent=set.name+(mode==='rarity'?' · '+set.equipment[slot].name:'');
@@ -132,7 +134,7 @@
     let rows=[];
     if(slot==='pet')rows=M.pets.map(p=>({value:p.name,name:p.name,search:p.variants.map(v=>v.name).join(' '),desc:plain(p.desc),art:'<span class="picker-pet-icons">'+p.variants.map(v=>art(v.icon,32).replace(/alt="[^"]*"/g,`alt="${esc(v.name)}"`)).join('')+'</span>',disabled:!profile.pets.includes(p.name)&&set.pet!==p.name,hint:profile.pets.includes(p.name)?'Owned':'Not marked as owned'}));
     else if(slot==='blessing')rows=M.blessings.map(b=>({value:b.id,name:'Lv. '+b.level+' · '+b.name,desc:plain(b.desc),art:art('divinity',34),disabled:!M.blessingAvailable(profile,b.id),hint:M.blessingAvailable(profile,b.id)?'':'Locked · Requires Divinity or an unlocked tome'}));
-    else rows=M.gearOptions('combat',null,slot).filter(name=>{
+    else rows=M.gearOptions('combat',null,slot).filter(name=>slot!=='shield'||M.offHandAllowed(set.equipment.weapon?.name,name)).filter(name=>{
       const e=R.EQUIPMENT[name];return filter==='all'||(filter==='magic'?(e.magic||e.magicMult):filter==='ranged'?(e.ranged||e.rng||e.rngBonus||e.quiver):(!e.magic&&!e.magicMult&&!e.ranged&&!e.quiver&&!e.rngBonus));
     }).map(name=>({value:name,name,desc:combatGearDescription(name,R.EQUIPMENT[name].infinite?1:tier),art:itemArt(name)}));
     const query=($('combat-search')?.value||'').toLowerCase().trim();rows=rows.filter(r=>(r.name+' '+r.desc+' '+(r.search||'')).toLowerCase().includes(query));
@@ -246,7 +248,7 @@
         case 'gear':{
           const item=value?{name:value,rarity:R.EQUIPMENT[value]?.infinite?1:(d.slot==='tool'?s.tool:s.equipment[d.slot])?.rarity||1}:null;
           if(d.slot==='tool')s.tool=item;else if(item)s.equipment[d.slot]=item;else delete s.equipment[d.slot];
-          if(d.slot==='weapon'&&R.EQUIPMENT[value]?.twoHand)delete s.equipment.shield;break;
+          if(d.slot==='weapon'&&!M.offHandAllowed(value,s.equipment.shield?.name))delete s.equipment.shield;break;
         }
         case 'rarity':(d.slot==='tool'?s.tool:s.equipment[d.slot]).rarity=number;break;
         case 'set-pet':s.pet=value;break;
@@ -275,7 +277,7 @@
         const name=d.combatChoice;
         if(slot==='pet'){if(name&&!p.pets.includes(name)&&set.pet!==name)throw new Error('Mark this pet as owned first.');set.pet=name;}
         else if(slot==='blessing'){if(!M.blessingAvailable(p,name))throw new Error('This blessing is locked.');set.blessing=name;}
-        else{if(name)set.equipment[slot]={name,rarity:R.EQUIPMENT[name]?.infinite?1:set.equipment[slot]?.rarity||1};else delete set.equipment[slot];if(slot==='weapon'&&R.EQUIPMENT[name]?.twoHand)delete set.equipment.shield;}
+        else{if(name)set.equipment[slot]={name,rarity:R.EQUIPMENT[name]?.infinite?1:set.equipment[slot]?.rarity||1};else delete set.equipment[slot];if(slot==='weapon'&&!M.offHandAllowed(name,set.equipment.shield?.name))delete set.equipment.shield;}
       },()=>renderSets('combat'));
       if(ok)$('combat-picker').close();return;
     }
@@ -358,17 +360,18 @@
   $('import-dialog').addEventListener('cancel',()=>{pendingImport=null;});
   $('import-new-character').addEventListener('click',()=>{if(!pendingImport)return;try{const id=M.createCharacter(localStorage,pendingImport);pendingImport=null;CharacterPicker.navigate(id);}catch(e){message(e.message,true);}});
   $('confirm-import').addEventListener('click',()=>{if(!pendingImport)return;profile=pendingImport;pendingImport=null;storageBlocked=false;document.querySelectorAll('[data-edit],#profile-name').forEach(el=>el.setCustomValidity(''));save();renderAll();$('import-dialog').close();message(importSource==='code'?'Profile loaded from setup code.':'Profile imported.');});
-  addEventListener('beforeunload',e=>{if(dirty||[...document.querySelectorAll('[data-edit],#profile-name')].some(el=>!el.checkValidity())){e.preventDefault();e.returnValue='';}});
+  addEventListener('beforeunload',e=>{if(!deletedHere&&(dirty||[...document.querySelectorAll('[data-edit],#profile-name')].some(el=>!el.checkValidity()))){e.preventDefault();e.returnValue='';}});
   addEventListener('storage',e=>{if(e.key===M.STORAGE_KEY){storageBlocked=true;$('save-status').textContent='Profile changed in another tab · Reload to use that version.';message('Another tab changed this profile. Autosave is paused here to avoid overwriting it. Export any edits you want to keep, then reload.',true);}});
   try{
     const saved=localStorage.getItem(M.STORAGE_KEY);
+    if(saved===null&&M.isCharacterDeleted(localStorage))throw Error('Character deleted.');
     if(saved===null&&M.characterId!=='default')throw Error('Character not found.');
     const recovered=M.characterId==='default'?CharacterProfileRecovery.recover(saved===null?null:JSON.parse(saved)):{profile:M.validate(JSON.parse(saved)),restored:false};
     profile=recovered.profile;
     if(recovered.restored){save();message('Restored your saved combat-planner profile from the local backup. Skills not recorded in that setup remain at their default levels.');}
     else $('save-status').textContent='Saved profile restored · Autosave on';
   }
-  catch{storageBlocked=true;$('save-status').textContent='Saved profile unavailable · Autosave paused';message('The saved profile could not be loaded. It has been left untouched. Import a valid backup to replace it, or export your edits to keep them.',true);}
+  catch{storageBlocked=true;let deleted=false;try{deleted=M.isCharacterDeleted(localStorage);}catch{}$('save-status').textContent=deleted?'Character deleted — Create a new character to continue.':'Saved profile unavailable · Autosave paused';message(deleted?'This character has been deleted. Choose another character, create a new one, or import a backup.':'The saved profile could not be loaded. It has been left untouched. Import a valid backup to replace it, or export your edits to keep them.',!deleted);}
   inventoryUI=ProfileInventoryUI.init({getProfile:()=>profile,replace:next=>{profile=M.validate(next);save();renderAll();},canEdit:()=>{if(storageBlocked){message('Reload to resolve the browser storage issue before editing or importing.',true);return false;}return validDraft();},report:message});
   renderAll();
 })();
