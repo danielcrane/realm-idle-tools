@@ -9,6 +9,8 @@
 #new-character-error{color:var(--danger,#ff9f9f)}
 #delete-character-dialog{max-width:min(440px,90vw);border-radius:12px;padding:24px;background:var(--panel,var(--paper,#192536));color:var(--ink,var(--text,inherit))}
 #delete-character-error{color:var(--danger,#ff9f9f)}
+#delete-character,#confirm-delete-character{background:#b42332;border-color:#b42332;color:#fff}
+#delete-character:hover,#confirm-delete-character:hover{background:#941b28;border-color:#941b28}
 .character-picker button:disabled{opacity:.5;cursor:default}
 .character-picker #refresh-characters{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;padding:8px}
 .character-picker [hidden]{display:none!important}
