@@ -125,7 +125,7 @@ const XPModel = (() => {
   function maintained(p,weather,candyXp,candySpeed){
     const st=stats(p,weather,candyXp,candySpeed),tm=timing(p.a.time,st.speed,p.s.timingMode,p.k);
     const chance=p.k==='thieving'?success(p.from,p.a.level,st.successBonus,st.weatherSuccess):1;
-    const extraXp=petXp(p,1,p.s.timingMode==='offline'&&p.k==='gathering'?st.xpAll:st.xpMult),perAction=p.a.xp*st.xpMult*chance+extraXp;
+    const extraXp=petXp(p,1,st.xpMult),perAction=p.a.xp*st.xpMult*chance+extraXp;
     let count=p.k==='thieving'?thieving(p.startXp,Infinity,p.a,st.xpMult,st.successBonus,p.startXp+p.required,st.weatherSuccess).count:Math.ceil(p.required/perAction);
     count=Math.ceil(count/tm.batch)*tm.batch;
     return {...st,...tm,xp:p.a.xp*st.xpMult,perAction,extraXp,chance,rate:perAction*3600/tm.seconds,count,hours:count/tm.batch*tm.interval/3600000};
@@ -161,7 +161,6 @@ const XPModel = (() => {
     const base=maintained(p,weather,0,0),rate=maintained(p,weather,candyXp,candySpeed),session=finiteSession(p),warnings=[];
     if(candyXp&&[p.s.customXp1,p.s.customXp2,p.s.customXp3].some(v=>Number(v)>0))warnings.push('Remove any custom XP bonus that already represents candy to avoid counting it twice.');
     if(p.k==='thieving')warnings.push('XP/hour is the starting-level rate. Target time and session XP update success chance as you level.');
-    if(p.k==='gathering'&&p.xpPotion.value)warnings.push('Offline bonus-resource pet XP does not receive the gathering XP potion multiplier. The session follows that source rule.');
     return {action:p.a,required:p.required,baseRate:base.rate,rate:rate.rate,xp:rate.xp,expectedXp:rate.perAction,seconds:rate.seconds,neededActions:rate.count,targetHours:rate.hours,
       xpFactors:rate.xpFactors,speedFactors:rate.speedFactors,extra:rate.extraXp/(p.a.xp*rate.xpMult),success:rate.chance,
       currentStrength:strength,candyXp,candySpeed,avgXp:session.avgXp,avgSpeed:session.avgSpeed,hours:p.hours,sessionActions:session.count,sessionXp:session.xp,session,
